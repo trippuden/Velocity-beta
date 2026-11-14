@@ -1,6 +1,3 @@
-// Home: the whole line on one page. A live 3D bay of real catalog products, shop by brand, shop by department,
-// how buying works, the bay builder, training (asked for on the quote), calibration (supplier being chosen) and the
-// questions shops ask. Every count on the page is read from the catalog data.
 import { SITE, STEPS, FAQ, TRAINING, CALIBRATION, STATS, PRESETS, BAY_ITEMS, FEATURED } from '../data.js';
 import { esc, rt, icon, cite, revealIn, countUp, loadScenes, webglOK, reducedMotion, sectionHead, num, fitHints } from '../core.js';
 import { catalog, liveBrands, soonBrands, nameList, nCodes } from '../catalog-data.js';
@@ -8,11 +5,8 @@ import { deptTile, calTile, listTile, deptOrder, famCard, brandGrid, brandsLine 
 
 const pad = (n) => String(n).padStart(2, '0');
 const ITEM = Object.fromEntries(BAY_ITEMS.map(i => [i.model, i]));
-// the hero rolls through the builder's own starting points, each one real catalog products
 const SHOW = ['body', 'prep', 'storage', 'full'].map(id => PRESETS.find(p => p.id === id)).filter(Boolean);
 
-// the still frame under the 3D scene. With 3D on it is the empty bay, the scene's own first frame, so the products
-// roll in on top of it; without 3D (or with reduced motion, where the bay opens full) it is the full bay.
 const poster = (full) => `<picture data-poster><source media="(max-width: 960px)" srcset="assets/img/hero-bay-m${full ? '' : '-empty'}.webp"><img class="hero__poster" src="assets/img/hero-bay${full ? '' : '-empty'}.webp" alt="" aria-hidden="true" fetchpriority="high"></picture>`;
 
 function hero(live) {
@@ -47,8 +41,6 @@ function hero(live) {
   </section>`;
 }
 
-// the strip under the hero: what is on the site, in the catalog's own numbers. Before the catalog has loaded the
-// places hold a dash, so no number is ever shown that the data didn't give.
 function rail(cat) {
   const live = cat ? liveBrands(cat) : [], soon = cat ? soonBrands(cat) : [];
   const items = !cat ? [['Catalog', '–'], ['Departments', '–'], ['Brands', '–']]
@@ -217,7 +209,6 @@ export const home = {
       const grid = el.querySelector('[data-depts]');
       grid.innerHTML = deptOrder(c).map(d => deptTile(d)).join('') + calTile() + listTile();
       el.querySelectorAll('.dtile, .bcard').forEach((t, i) => { t.setAttribute('data-reveal', ''); t.style.transitionDelay = `${(i % 4) * 50}ms`; });
-      // a card names its brand only when the row mixes brands
       const picks = FEATURED.map(id => c.fam[id]).filter(Boolean), mixed = new Set(picks.map(f => f.brand)).size > 1;
       el.querySelector('[data-featured]').innerHTML = picks.map(f => famCard(f, { pack: 'set/featured', brand: mixed ? c.brand[f.brand] : null })).join('');
       el.querySelectorAll('[data-code-label]').forEach(i => { const x = c.codes.get(i.dataset.codeLabel); i.textContent = x ? x.label : ''; });
@@ -228,7 +219,6 @@ export const home = {
       el.querySelector('[data-brands]').innerHTML = '';
     });
 
-    // the live bay: real catalog products roll in, one starting point after another
     const stage = el.querySelector('[data-hero-stage]'), tags = el.querySelector('[data-tags]');
     const hud = (k, v) => { const n = el.querySelector(`[data-hud="${k}"]`); if (n) n.textContent = v; };
     const label = (code) => (cat && cat.codes.get(code) ? cat.codes.get(code).label : '');
@@ -237,7 +227,6 @@ export const home = {
     const drawTags = (anchors) => {
       if (!tags.isConnected) return;
       const now = performance.now();
-      // one tag lights up at a time and moves on every 1.6 seconds
       const list = anchors.filter(a => a.id !== 'mt-sanders' && a.front && !a.landing);
       if (now - lastSwap > 1600 && list.length) { active = (active + 1) % list.length; lastSwap = now; }
       const seen = new Set();
@@ -255,7 +244,6 @@ export const home = {
         t.classList.toggle('is-left', a.x > stage.clientWidth * 0.78);
       });
       for (const [k, t] of tagEls) if (!seen.has(k)) { t.remove(); tagEls.delete(k); }
-      // a tag that sits under the lit tag's label steps back, so the two never read on top of each other
       const lit = [...tagEls.values()].find(t => t.classList.contains('is-live'));
       const box = lit && lit.querySelector('span').getBoundingClientRect();
       for (const t of tagEls.values()) {
@@ -271,7 +259,6 @@ export const home = {
       hud('n', String(Object.values(p.items).reduce((s, q) => s + q, 0)));
     };
     const layoutShift = () => (window.matchMedia('(max-width: 960px)').matches ? 0 : 0.34);
-    // 3D didn't come up after all: show the full bay instead of the empty one
     const fullPoster = () => { const p = el.querySelector('[data-poster]'); if (p && live) p.outerHTML = poster(true); };
     if (webglOK()) {
       loadScenes().then(mod => {

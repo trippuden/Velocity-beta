@@ -1,5 +1,3 @@
-// Calibration: a department with no products yet. Velocity is choosing the supplier, so this page says so,
-// shows the sourced industry numbers, and takes names for when the lineup is set. No kits, no prices.
 import { CALIBRATION, STATS, CAL_NEAR } from '../data.js';
 import { esc, icon, cite, sectionHead, revealIn, countUp, bindLeadForm, contactFields, contactSummary, scoreLead } from '../core.js';
 import { catalog } from '../catalog-data.js';

@@ -1,7 +1,3 @@
-// Brands: every brand named on the site has its own pages. A brand whose catalog is in the data gets its catalog,
-// split by department (#b-martech, #b-martech-d-welding); a brand that is named but not listed yet says so and
-// lists nothing. A brand's name is set in the site's own type: no logos, no artwork, no dealer-status claims.
-// Nothing here is written for one brand: the pages are built from the catalog data and the brand copy in data.js.
 import { FEATURED } from '../data.js';
 import { esc, icon, num, revealIn, sectionHead, fitHint } from '../core.js';
 import { catalog, liveBrands, nCodes, loaded } from '../catalog-data.js';
@@ -38,11 +34,9 @@ export const brandsIndex = {
   },
 };
 
-// a brand whose catalog is on the site: its counts, a search inside it, its departments and what it says of itself
 function livePage(b, cat) {
   const counts = [[b.codes, 'part numbers'], [b.depts.length, b.depts.length === 1 ? 'department' : 'departments'], ...(b.photos ? [[b.photos, 'photos']] : [])];
   const picks = FEATURED.map(id => cat.fam[id]).filter(f => f && f.brand === b.id);
-  // the tile that closes the department grid square at 4, 3 and 2 columns: how many cells are left in the last row
   const left = (cols) => (cols - b.depts.length % cols) % cols;
   const closer = `<a class="dtile dtile--list dtile--fill" href="#search/b-${b.id}" data-f4="${left(4)}" data-f3="${left(3)}" data-f2="${left(2)}" style="--f4:${left(4) || 1};--f3:${left(3) || 1};--f2:${left(2) || 1}">
     <span class="dtile__body"><span class="dtile__n">${nCodes(b.codes)}</span><span class="dtile__name">Search the ${esc(b.name)} catalog ${icon('arrow')}</span><span class="dtile__subs">Type a part number, or what the tool does.</span></span>
@@ -100,7 +94,6 @@ function livePage(b, cat) {
   </section>`;
 }
 
-// a brand Velocity has named whose catalog isn't in the data yet: no products, photos or specs, only how to ask
 function soonPage(b, cat) {
   const others = liveBrands(cat);
   const steps = [

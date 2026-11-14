@@ -1,6 +1,3 @@
-// The catalog: the index, department pages (every brand, or one brand's part of a department), product family
-// pages and search results, and the cards the brand pages share with them.
-// Every product, part number, spec and photo comes from the catalog data (assets/data). Nothing here has a price.
 import { CALIBRATION, HOME_DEPTS, TRAINING } from '../data.js';
 import { esc, icon, addButton, syncAddButtons, revealIn, num, fitHints } from '../core.js';
 import { catalog, detail, photoAttrs, photoURL, famPack, famHref, deptHref, brandHref, brandDeptHref, liveBrands, soonBrands, nameList, nCodes, nPages, codeSlug, codeInTail, loaded } from '../catalog-data.js';
@@ -9,10 +6,6 @@ import { search } from '../search.js';
 const rivets = '<i class="rv"></i><i class="rv"></i><i class="rv"></i><i class="rv"></i>';
 export const lockMark = (cls = '') => `<svg class="lockmark ${cls}" viewBox="0 0 2 2" aria-hidden="true"><rect width="1" height="1" fill="currentColor"/><rect x="1" y="1" width="1" height="1" fill="currentColor"/><circle cx="1" cy="1" r=".23" fill="#FF3D1F"/></svg>`;
 
-// a photo on its own light panel; the book's white backgrounds melt into it. pack: the photo pack that holds it
-// (see catalog-data.js); src: a photo already loaded
-// cap: the photo is never drawn more than 1.5 times its real size (catalog.css). The book's photos are small, and a
-// small photo stretched across a big panel goes soft.
 export function photo(key, { pack = '', src = '', alt = '', cls = '', eager = false, w = 0, h = 0, cap = false } = {}) {
   if (!key) return `<span class="ph-none ${cls}">${lockMark()}<span>No photo in the catalog</span></span>`;
   return `<img class="${cls}" ${src ? `src="${src}"` : photoAttrs(key, pack, eager)} alt="${esc(alt)}" decoding="async"${w && h ? ` width="${w}" height="${h}"` : ''}${cap && w && h ? ` style="--nw:${w}px;--nh:${h}px"` : ''}>`;
@@ -22,8 +15,6 @@ export const loading = (what = 'the catalog') => `<div class="wrap cat-wait"><p 
 export const missing = (what) => `<div class="wrap nf"><p class="kicker">Catalog</p><h1 class="h1 h1--sm">That ${esc(what)} isn’t in the catalog.</h1><p class="lede">It may have moved. Search a part number or open a department.</p><p class="row-gap"><a class="btn btn--signal" href="#search">Search the catalog ${icon('search')}</a><a class="btn btn--line" href="#catalog">All departments</a></p></div>`;
 export const failed = () => `<div class="wrap nf"><p class="kicker">Catalog</p><h1 class="h1 h1--sm">The catalog didn’t load.</h1><p class="lede">Check your connection and reload the page. You can still call or email us your list.</p><p class="row-gap"><button type="button" class="btn btn--signal" data-reload>Reload ${icon('rotate')}</button><a class="btn btn--line" href="#quote">Send your list</a></p></div>`;
 
-// a product family card, built like the data plate riveted to the equipment
-// brand: the brand to name on the card, for lists that mix brands; left out where the whole list is one brand's
 export function famCard(f, { lead = '', pack = '', brand = null } = {}) {
   const href = famHref(f);
   const more = f.all > 1 ? `<span class="fcard__more">${nCodes(f.all)}</span>` : '';
@@ -39,7 +30,6 @@ export function famCard(f, { lead = '', pack = '', brand = null } = {}) {
   </article>`;
 }
 
-// product families as rows of part numbers: how a brand whose catalog comes without photos is listed
 export function famRows(ids, cat, { brand = false } = {}) {
   return `<ul class="clist clist--wide clist--rows">${ids.map(id => {
     const f = cat.fam[id];
@@ -51,14 +41,12 @@ export function famRows(ids, cat, { brand = false } = {}) {
   }).join('')}</ul>`;
 }
 
-// the photo that stands for a department: its own, or for one brand's part of it a photo of that brand's
 const deptPhoto = (d, cat, brand) => {
   if (!brand || d.hb === brand.id || (!d.hb && d.brands[0] === brand.id)) return photo(d.hero, { pack: 'set/heroes' });
   const f = d.by[brand.id].fams.map(id => cat.fam[id]).find(x => x.photo);
   return f ? photo(f.photo, { pack: f.lp }) : '';
 };
 
-// brand: the tile for one brand's part of the department, with that brand's count, groups and address
 export function deptTile(d, { big = false, brand = null, cat = null } = {}) {
   const part = brand ? d.by[brand.id] : d;
   const subs = part.subs.map(([s]) => s).filter(Boolean);
@@ -73,17 +61,13 @@ export function deptTile(d, { big = false, brand = null, cat = null } = {}) {
   </a>`;
 }
 
-/* ---------- brands ---------- */
 
 export const nDepts = (n) => `${n} department${n === 1 ? '' : 's'}`;
-// "Martech is on the site in full. Milwaukee is being added." for however many brands the data holds
 export function brandsLine(cat) {
   const live = liveBrands(cat).map(b => b.name), soon = soonBrands(cat).map(b => b.name);
   return [live.length ? `${nameList(live)} ${live.length === 1 ? 'is' : 'are'} on the site in full.` : '', soon.length ? `${nameList(soon)} ${soon.length === 1 ? 'is' : 'are'} being added.` : ''].filter(Boolean).join(' ');
 }
 
-// a brand, its name set in the site's own type (no logos). A live brand shows its counts over photos of its own
-// products; a brand whose catalog isn't on the site yet says so and lists nothing.
 export function brandCard(b, cat) {
   if (!b.live) return `<a class="bcard bcard--soon" href="${brandHref(b)}">
     <span class="bcard__body">
@@ -115,7 +99,6 @@ export function calTile() {
   </a>`;
 }
 
-// departments in the order the home page leads with, then the rest in catalog order
 export function deptOrder(cat) {
   const first = HOME_DEPTS.map(id => cat.dept[id]).filter(Boolean);
   return [...first, ...cat.depts.filter(d => !HOME_DEPTS.includes(d.id))];
@@ -127,12 +110,10 @@ export const crumbs = (items) => `<nav class="crumbs" aria-label="Breadcrumb">${
 }).join('')}</nav>`;
 
 export const powerNote = `<p class="note">${icon('bolt')}<span>Specs are shown the way the factory prints them: metric units, and European voltages (230 V or 400 V) for most machines. Tell us your shop’s power on the quote and the right version gets quoted.</span></p>`;
-// the note goes where a brand that prints European specs is listed (data.js says which brands do)
 export const powerNoteFor = (brands) => (brands.some(b => b && b.euro) ? powerNote : '');
 const TRAIN_DEPTS = new Set(TRAINING.examples.map(([d]) => d));
 const EURO_V = /\b(230|400|380|220)\s?V\b|\b(230|400)\s?\/\s?\d/;
 
-/* ---------- catalog index ---------- */
 
 export const listTile = () => `<a class="dtile dtile--list" href="#quote">
   <span class="dtile__body">
@@ -197,16 +178,13 @@ export const catalogIndex = {
   },
 };
 
-// whose catalog the counts are: "All from the Martech catalog. Milwaukee is being added."
 export function countsSource(cat) {
   const live = liveBrands(cat).map(b => b.name), soon = soonBrands(cat).map(b => b.name);
   if (!live.length) return '';
   return `${live.length === 1 ? `All from the ${live[0]} catalog.` : `From the ${nameList(live)} catalogs.`}${soon.length ? ` ${nameList(soon)} ${soon.length === 1 ? 'is' : 'are'} being added.` : ''}`;
 }
 
-/* ---------- department ---------- */
 
-// a department, from every brand (#d-welding) or one brand's part of it (#b-martech-d-welding)
 export function deptPage(id, brandId = '') {
   return {
     id: 'dept', nav: 'catalog',
@@ -223,7 +201,6 @@ export function deptPage(id, brandId = '') {
         if (!d) { el.innerHTML = missing('department'); return; }
         const b = brandId ? cat.brand[brandId] : null;
         if (brandId && !b) { el.innerHTML = missing('brand'); return; }
-        // a brand whose catalog isn't on the site yet has no department pages: its own page says so
         if (b && !b.live) { location.replace(brandHref(b)); return; }
         if (b && !d.by[b.id]) {
           document.title = `${b.name} ${d.name} | Velocity`;
@@ -234,13 +211,11 @@ export function deptPage(id, brandId = '') {
         const part = b ? d.by[b.id] : d;
         const subs = part.subs;
         const named = subs.filter(([s]) => s).length > 1;
-        // cards name their brand only where the list mixes brands
         const mixed = !b && d.brands.length > 1;
         const own = !b || d.hb === b.id || (!d.hb && d.brands[0] === b.id);
         const lead = b && !own ? d.by[b.id].fams.map(x => cat.fam[x]).find(x => x.photo) : null;
         const img = own ? photo(d.hero, { pack: d.hp, eager: true, w: d.hw, h: d.hh, cap: true })
           : lead ? photo(lead.photo, { pack: lead.lp, eager: true, w: lead.w, h: lead.h, cap: true }) : '';
-        // who the department is from: one brand's page says how to see every brand's, and the other way round
         const by = b
           ? (d.brands.length > 1 ? `<p class="dhead__by"><a class="link-arrow" href="${deptHref(d)}">${esc(d.name)} from every brand ${icon('arrow')}</a></p>` : '')
           : d.brands.length > 1
@@ -274,13 +249,11 @@ export function deptPage(id, brandId = '') {
           ${powerNoteFor(b ? [b] : d.brands.map(x => cat.brand[x]))}
           <aside class="bay-callout"><div><h3>Want it on the floor first?</h3><p>Drop real catalog products into a 3D bay, move the camera around them, and send the whole bay as one quote.</p></div><a class="btn btn--signal" href="#bay">Build your bay ${icon('arrow')}</a></aside>
         </div>`;
-        // chips scroll to their section (the hash is the route) and follow the reader down the page
         el.querySelectorAll('[data-sub]').forEach(a => a.addEventListener('click', e => {
           e.preventDefault();
           const t = el.querySelector(`#sub-${a.dataset.sub}`);
           if (t) window.scrollTo({ top: t.getBoundingClientRect().top + window.scrollY - (document.querySelector('.hdr').offsetHeight + 76), behavior: 'smooth' });
         }));
-        // only the chip strip scrolls sideways; scrollIntoView would also stop the page's own smooth scroll
         const strip = el.querySelector('[data-subchips]');
         if (named && 'IntersectionObserver' in window) {
           const mark = (k) => {
@@ -296,7 +269,6 @@ export function deptPage(id, brandId = '') {
           el.querySelectorAll('[data-subsec]').forEach(s => io.observe(s));
           io.observe(el.querySelector('.dhead'));
         }
-        // a busy department's chips run past the edge: a soft fade on the side that has more
         if (strip) {
           const edges = () => { const max = strip.scrollWidth - strip.clientWidth; strip.classList.toggle('is-more-l', strip.scrollLeft > 4); strip.classList.toggle('is-more-r', strip.scrollLeft < max - 4); };
           strip.addEventListener('scroll', edges, { passive: true });
@@ -311,10 +283,8 @@ export function deptPage(id, brandId = '') {
   };
 }
 
-/* ---------- product family ---------- */
 
 function codeRows(f, dt, cat, focus) {
-  // the part number list: the family's own codes, with the table columns the catalog prints
   const t = dt.table, own = dt.codes || [];
   const label = (c) => (cat.codes.get(c) || {}).label || '';
   const isCode = (c) => cat.codes.has(c);
@@ -326,9 +296,10 @@ function codeRows(f, dt, cat, focus) {
     own.forEach(([c, l]) => { if (!seen.has(c)) rows.unshift({ code: c, label: l, vals: cols.map(() => ''), lead: true }); });
   } else rows = own.map(([c, l]) => ({ code: c, label: l, vals: [] }));
   if (!rows.length) return '';
-  // tables whose rows are a kit's contents (no part numbers of their own) show as a list under the kit
   const anySP = rows.some(r => isCode(r.code));
   const showLabel = rows.some(r => r.label && !(t && cols[0] && r.vals[0] && r.label.startsWith(r.vals[0])));
+  const block = new Map((dt.items || []).flatMap(it => it.codes.map(x => [x, it.codes[0]])));
+  const more = (code) => (block.has(code) ? ` <a class="ptable__more" href="#details" data-jump="i-${codeSlug(block.get(code))}">Specs ${icon('down')}</a>` : '');
   return `<section class="fsec" id="parts">
     <header class="fsec__head"><h2 class="h3">${anySP ? 'Part numbers' : 'What’s in it'}</h2><p class="fsec__meta">${anySP ? nCodes(rows.filter(r => isCode(r.code)).length) : `${rows.length} items`}</p></header>
     <div class="ptable-wrap"><table class="ptable ${cols.length ? '' : 'ptable--simple'}">
@@ -337,13 +308,66 @@ function codeRows(f, dt, cat, focus) {
         const isSP = isCode(r.code), c = isSP ? cat.codes.get(r.code) : null;
         return `<tr${isSP ? ` id="c-${codeSlug(r.code)}"` : ''} class="${r.code === focus ? 'is-focus' : ''}" ${c && c.photo ? `data-photo="${esc(c.photo)}"` : ''}>
           <th scope="row" class="ptable__code">${isSP ? `<span class="pn">${esc(r.code)}</span>` : esc(r.code)}</th>
-          ${showLabel ? `<td class="ptable__label">${esc(r.label)}</td>` : ''}
+          ${showLabel ? `<td class="ptable__label">${esc(r.label)}${more(r.code)}</td>` : ''}
           ${cols.map((_, i) => `<td class="ptable__v">${esc(r.vals[i] || '')}</td>`).join('')}
           ${anySP ? `<td class="ptable__q">${isSP ? addButton(r.code, r.label || f.name, { text: 'Add' }) : ''}</td>` : ''}
         </tr>`;
       }).join('')}</tbody>
     </table></div>
   </section>`;
+}
+
+const specCell = (v) => (v === '-' || v === '' ? '<span class="pcomp__no">–</span>' : esc(v));
+function itemBlocks(dt, cat, focus) {
+  const items = dt.items;
+  if (!items || !items.length) return '';
+  const label = (code) => (cat.codes.get(code) || {}).label || '';
+  const n = new Set(items.flatMap(it => it.codes)).size;
+  const isWide = (it) => !!it && (it.cols || []).length > 1;
+  let col = 0;
+  const solo = items.map((it, i) => {
+    if (isWide(it)) { col = 0; return false; }
+    if (col === 0 && (i === items.length - 1 || isWide(items[i + 1]))) return true;
+    col = 1 - col;
+    return false;
+  });
+  return `<section class="fsec" id="details">
+    <header class="fsec__head"><h2 class="h3">Details by part number</h2><p class="fsec__meta">${nCodes(n)}</p></header>
+    <div class="pitems">${items.map((it, i) => {
+      const codes = it.codes, one = codes.length === 1 ? codes[0] : '';
+      const c0 = cat.codes.get(codes[0]);
+      const name = it.name || label(codes[0]);
+      const specs = it.specs || [], cols = it.cols || [];
+      const wide = cols.length > 1;
+      return `<article class="pitem ${wide || solo[i] ? 'pitem--wide' : ''} ${codes.includes(focus) ? 'is-focus' : ''}" id="i-${codeSlug(codes[0])}">
+        <header class="pitem__head">
+          <span class="clist__img pitem__img">${c0 && c0.photo ? photo(c0.photo, { pack: famPack(c0.fid) }) : ''}</span>
+          <div class="pitem__t"><p class="pitem__codes">${codes.map(x => `<span class="pn">${esc(x)}</span>`).join('')}</p><h3 class="pitem__name">${esc(name)}</h3></div>
+          ${one ? addButton(one, label(one) || name, { text: 'Add' }) : ''}
+        </header>
+        ${it.desc ? `<p class="pitem__desc">${esc(it.desc)}</p>` : ''}
+        ${specs.length && wide ? `<div class="ptable-wrap pcomp-wrap"><table class="pcomp">
+          <thead><tr><th scope="col"><span class="sr">Spec</span></th>${cols.map(x => `<th scope="col"><span class="pn">${esc(x)}</span></th>`).join('')}</tr></thead>
+          <tbody>${specs.map(r => `<tr><th scope="row">${esc(r[0])}</th>${r.length === 2 ? `<td colspan="${cols.length}" class="pcomp__all">${specCell(r[1])}</td>` : r.slice(1).map(v => `<td>${specCell(v)}</td>`).join('')}</tr>`).join('')}</tbody>
+        </table></div>` : ''}
+        ${specs.length && !wide ? `<dl class="pspecs">${specs.map(([k, v]) => `<div><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join('')}</dl>` : ''}
+        ${it.note ? `<p class="pitem__note">${esc(it.note)}</p>` : ''}
+        ${it.features && it.features.length ? `<ul class="ticks pitem__feats">${it.features.map(x => `<li>${icon('check')}<span>${esc(x)}</span></li>`).join('')}</ul>` : ''}
+      </article>`;
+    }).join('')}</div>
+  </section>`;
+}
+
+function stepsBlock(st) {
+  if (!st || !st.list || !st.list.length) return '';
+  return `<section class="fsec"><header class="fsec__head"><h2 class="h3">${esc(st.title || 'How to use it')}</h2></header>
+    ${st.lede ? `<p class="fsec__sub">${esc(st.lede)}</p>` : ''}
+    <ol class="pguide">${st.list.map(x => `<li><span>${esc(x)}</span></li>`).join('')}</ol>
+  </section>`;
+}
+function notesBlock(notes) {
+  if (!notes || !notes.length) return '';
+  return `<section class="fsec"><header class="fsec__head"><h2 class="h3">Good to know</h2></header><ul class="inc">${notes.map(x => `<li>${icon('check')}<span>${esc(x)}</span></li>`).join('')}</ul></section>`;
 }
 
 function codeList(title, list, cat, fid, sub = '') {
@@ -366,10 +390,8 @@ function codeList(title, list, cat, fid, sub = '') {
 function includesBlock(inc, cat) {
   if (!inc) return '';
   const item = (x) => {
-    // "Dent pulling star washer holder (SP240911)": link the code when it is in the catalog
     const m = x.match(/\(?(SP\d{6,7})\)?/);
     const c = m && cat.codes.get(m[1]);
-    // "Trolley (SP232103)" reads as the name and its part number, without the brackets around the chip
     const txt = esc(x.replace(/\s*\((SP\d{6,7})\)/g, ' $1')).replace(/SP\d{6,7}/g, s => `<span class="pn">${s}</span>`);
     return `<li>${icon('check')}<span>${c ? `<a href="${famHref(cat.fam[c.fid], m[1])}">${txt}</a>` : txt}</span></li>`;
   };
@@ -380,7 +402,6 @@ function includesBlock(inc, cat) {
   </section>`;
 }
 
-// tail: what follows the family id in the address: the product's name and, last, the part number to open it on
 export function familyPage(fid, tail = '') {
   return {
     id: 'family', nav: 'catalog',
@@ -394,17 +415,14 @@ export function familyPage(fid, tail = '') {
         const f = cat.fam[fid];
         if (!f) { el.innerHTML = missing('product'); return; }
         focus = codeInTail(cat, tail);
-        // the book prints three products twice: the copy opens the page the catalog lists
         if (f.dup && cat.fam[f.dup]) { location.replace(famHref(cat.fam[f.dup], focus)); return; }
         if (!dt) { el.innerHTML = failed(); return; }
         const d = cat.dept[f.dept], b = cat.brand[f.brand];
         const photos = dt.photos && dt.photos.length ? dt.photos : (f.photo ? [[f.photo, f.w, f.h, []]] : []);
-        // a part number in the address is shown only if it belongs to this product
         const fc0 = focus && cat.codes.get(focus);
         const fc = fc0 && (fc0.fid === fid || JSON.stringify(dt).includes(`"${focus}"`)) ? fc0 : null;
         if (!fc) focus = '';
         document.title = `${f.name}${focus ? ` ${focus}` : ''} · ${b.name} | Velocity`;
-        // old links (p/f009) and links with an old slug or a stray part number get the product's own address
         const canon = famHref(f, focus);
         if (location.hash !== canon) history.replaceState(null, '', canon);
         const startPhoto = fc && fc.photo && photos.findIndex(p => p[0] === fc.photo) >= 0 ? photos.findIndex(p => p[0] === fc.photo) : 0;
@@ -412,7 +430,7 @@ export function familyPage(fid, tail = '') {
         const allSP = [...new Set([...own.map(([c]) => c), ...((dt.table && dt.table.rows) || []).map(r => r[0]).filter(c => cat.codes.has(c))])];
         const one = allSP.length === 1 ? allSP[0] : '';
         const specs = dt.specs || [];
-        const euro = EURO_V.test(JSON.stringify([specs, dt.table || '']));
+        const euro = EURO_V.test(JSON.stringify([specs, dt.table || '', dt.items || '']));
         const buy = fc
           ? `<div class="buy"><p class="buy__k">${focus === one ? 'Part number' : 'You picked'}</p><p class="buy__code"><span class="pn">${esc(focus)}</span> ${esc(fc.label)}</p>${addButton(focus, fc.label, { big: true })}${allSP.length > 1 ? `<a class="buy__more" href="#parts" data-jump="parts">See all ${allSP.length} versions ${icon('down')}</a>` : ''}</div>`
           : one
@@ -449,7 +467,10 @@ export function familyPage(fid, tail = '') {
         </section>
         <div class="wrap fam__more">
           ${codeRows(f, dt, cat, focus)}
+          ${itemBlocks(dt, cat, focus)}
+          ${stepsBlock(dt.steps)}
           ${includesBlock(dt.includes, cat)}
+          ${notesBlock(dt.notes)}
           ${codeList('Options and accessories', dt.acc, cat, fid)}
           ${codeList('Consumables', dt.con, cat, fid)}
           ${codeList('Spare parts and related part numbers', dt.other, cat, fid)}
@@ -457,7 +478,6 @@ export function familyPage(fid, tail = '') {
         </div>
         <section class="sec sec--tight related"><div class="wrap" data-related></div></section>`;
 
-        // gallery
         const gal = el.querySelector('[data-gal]');
         let cur = startPhoto;
         const show = (i) => {
@@ -465,7 +485,6 @@ export function familyPage(fid, tail = '') {
           cur = i;
           gal.querySelector('[data-cap]').innerHTML = p[3].map(c => `<span class="pn">${esc(c)}</span>`).join('');
           el.querySelectorAll('[data-ph]').forEach(b => b.classList.toggle('is-on', +b.dataset.ph === i));
-          // the photo swaps in once it is ready, so the frame never goes blank
           photoURL(p[0], famPack(fid)).then(src => {
             if (cur !== i || !src) return;
             const im = new Image(); im.src = src;
@@ -475,7 +494,6 @@ export function familyPage(fid, tail = '') {
           }).catch(() => {});
         };
         el.querySelectorAll('[data-ph]').forEach(b => b.addEventListener('click', () => show(+b.dataset.ph)));
-        // a row with its own photo shows it in the gallery
         el.querySelectorAll('tr[data-photo]').forEach(tr => tr.addEventListener('mouseenter', () => {
           const i = photos.findIndex(p => p[0] === tr.dataset.photo); if (i >= 0) show(i);
         }));
@@ -483,7 +501,6 @@ export function familyPage(fid, tail = '') {
           e.preventDefault(); const t = el.querySelector(`#${a.dataset.jump}`); if (t) t.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }));
 
-        // related: the rest of the subsection, then the department, from the same brand
         const mine = d.by[b.id] || { subs: [], fams: [] };
         const sibs = (mine.subs.find(([, ids]) => ids.includes(fid)) || [, []])[1].filter(x => x !== fid);
         const rest = mine.fams.filter(x => x !== fid && !sibs.includes(x));
@@ -502,9 +519,7 @@ export function familyPage(fid, tail = '') {
   };
 }
 
-/* ---------- search results ---------- */
 
-// brand0: search inside one brand's catalog (#search/spot welder/b-martech)
 export function searchPage(q0 = '', brand0 = '') {
   return {
     id: 'search', nav: 'catalog', title: () => (q0 ? `Search: ${q0}` : 'Search'),
@@ -534,14 +549,12 @@ export function searchPage(q0 = '', brand0 = '') {
         const where = b ? `the ${esc(b.name)} catalog` : 'the catalog';
         document.title = q ? `Search: ${q} | Velocity` : 'Search | Velocity';
         input.placeholder = b ? `Search the ${b.name} catalog` : 'Part number or product';
-        // which catalog is searched: every brand's, or one brand's
         scopeEl.hidden = !(b || live.length > 1);
         scopeEl.innerHTML = scopeEl.hidden ? '' : `<span class="sres__k">Search in</span><div class="chips">${[['', 'All brands'], ...live.map(x => [x.id, x.name])].map(([id, name]) => `<button type="button" class="chip ${id === scope ? 'is-on' : ''}" data-scope-to="${esc(id)}" aria-pressed="${id === scope}">${esc(name)}</button>`).join('')}</div>`;
         if (!q) { sum.textContent = ''; res.innerHTML = `<p class="muted">Type a part number like <span class="pn">SP202002</span>, or what the tool does: spot welder, bumper rack, paint gun, wrench set.</p>`; return; }
         const r = search(cat, q, { famLimit: 48, codeLimit: 60, brand: scope });
         const nf = r.totalFams ?? r.fams.length, nc = r.totalCodes ?? r.codes.length;
         const brandOf = (f) => cat.brand[f.brand];
-        // cards and rows name their brand only when the results mix brands
         const mixed = new Set([...r.fams.map(f => f.brand), ...r.codes.map(c => cat.fam[c.fid].brand)]).size > 1;
         const soon = r.brands.find(x => !x.live);
         sum.innerHTML = r.exact ? `Part number <span class="pn">${esc(r.exact.code)}</span> is in ${b ? where : `the ${esc(brandOf(cat.fam[r.exact.fid]).name)} catalog`}.`
@@ -579,7 +592,6 @@ export function searchPage(q0 = '', brand0 = '') {
         if (gone) return;
         cat = c;
         let q = q0;
-        // "/b-12" at the end of a search that isn't a brand is part of what was typed
         if (scope && !cat.brand[scope]) { q = `${q0}${q0 ? '/' : ''}b-${scope}`; scope = ''; input.value = q; history.replaceState(null, '', addr(q)); }
         paint(q);
         if (!q) input.focus();

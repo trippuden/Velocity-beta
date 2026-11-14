@@ -1,6 +1,3 @@
-// Training: what Velocity has confirmed and nothing more. It trains shops on equipment it sells, and a shop asks
-// for it (the box on the quote, or the form here); Velocity then works it out with that shop. No page says training
-// is free, included or guaranteed. Who trains, where and what it costs are open questions for the Velocity team.
 import { TRAINING } from '../data.js';
 import { esc, icon, sectionHead, revealIn, bindLeadForm, contactFields, contactSummary, scoreLead, fitHints } from '../core.js';
 import { catalog, deptHref } from '../catalog-data.js';

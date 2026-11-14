@@ -1,15 +1,12 @@
-// Velocity equipment, modeled to real-world proportions (meters). Fronts face +Z, origin at floor center.
-// These are concept models standing in for product photography.
 import {
   THREE, mats, mesh, box, cyl, ring, tube, at, group, decal, caster, casterSet,
   wordmarkTexture, labelTexture, targetTexture, rulerTexture, screenTexture, qrPlacardTexture, boxLabelTexture,
 } from './three-kit.js';
 
-const CH = 0.11; // standard caster height
+const CH = 0.11;
 
 function hs(n, label, pos) { return { n, label, pos }; }
 
-/* ============ ADAS calibration ============ */
 
 export function adasFrame({ variant = 'pro', lift = null, laserKit = true } = {}) {
   const m = mats();
@@ -86,11 +83,9 @@ export function adasFrame({ variant = 'pro', lift = null, laserKit = true } = {}
       at(lm, s * (barL / 2 + 0.03), 0, 0.18); cross.add(lm);
       lasers.push([s * (barL / 2 + 0.03), -0.012, 0.26]);
     });
-    // center line laser under the bar
     cross.add(at(box(0.07, 0.05, 0.08, m.powderDeep, 0.01), 0, -0.065, 0.2));
     cross.add(at(cyl(0.012, 0.01, m.lens, { axis: 'z', seg: 20 }), 0, -0.07, 0.242));
   } else {
-    // no laser positioning on this kit: plain end caps on the crossbar
     [-1, 1].forEach(s => cross.add(at(box(0.03, 0.094, 0.114, m.signal, 0.008), s * (barL / 2 + 0.012), 0, 0.17)));
   }
   const tW = pro ? 1.0 : 0.82, tH = pro ? 0.62 : 0.5;
@@ -105,7 +100,6 @@ export function adasFrame({ variant = 'pro', lift = null, laserKit = true } = {}
   cross.position.y = H;
   g.add(cross);
 
-  // named points the kits and the hero hang their callouts on
   const anchors = {
     laser: [barL / 2 + 0.03, H + 0.06, 0.25],
     target: [-tW * 0.3, H + boardY + tH * 0.25, 0.24],
@@ -208,7 +202,6 @@ export function radarKit() {
   return g;
 }
 
-/** Lane departure target on a floor stand. Board faces +Z. */
 export function ldwStand() {
   const m = mats();
   const g = new THREE.Group();
@@ -225,7 +218,6 @@ export function ldwStand() {
   return g;
 }
 
-/** Rugged scan tablet on its kickstand, with the hard case it ships in. */
 export function scanTablet() {
   const m = mats();
   const g = new THREE.Group();
@@ -235,7 +227,6 @@ export function scanTablet() {
   const scr = decal(screenTexture('cal'), TW - 0.05, (TW - 0.05) * 0.625, { emissive: true, transparent: false }); at(scr, 0, 0, 0.0135); tab.add(scr);
   tab.rotation.x = -0.32; at(tab, 0, TH / 2 * Math.cos(0.32) + 0.012, 0.0); g.add(tab);
   const stand = box(0.16, 0.014, 0.16, m.powderDeep, 0.004); stand.rotation.x = 0.9; at(stand, 0, 0.06, -0.07); g.add(stand);
-  // hard case lying beside it
   const kase = group(
     box(0.46, 0.09, 0.34, m.powderDeep, 0.022),
     at(box(0.47, 0.016, 0.35, m.powder, 0.006), 0, 0.02, 0),
@@ -247,7 +238,6 @@ export function scanTablet() {
   return g;
 }
 
-/** One 360-camera floor target mat, lying flat. Long side on X. */
 export function surroundMat({ w = 0.92, d = 0.5 } = {}) {
   const m = mats();
   const g = new THREE.Group();
@@ -257,12 +247,9 @@ export function surroundMat({ w = 0.92, d = 0.5 } = {}) {
   return g;
 }
 
-// position a sub-model in a kit and carry its points into kit space
 const put = (obj, x, z, ry = 0) => { obj.position.set(x, 0, z); obj.rotation.y = ry; return obj; };
 const xf = ([px, py, pz], x, z, ry = 0) => [x + px * Math.cos(ry) + pz * Math.sin(ry), py, z - px * Math.sin(ry) + pz * Math.cos(ry)];
 
-/** A CAL kit laid out the way it ships: the frame with everything that comes with it.
- *  level 1 = CAL-1 Mobile, 2 = CAL-2 Pro, 3 = CAL-X All-Systems. Each level holds everything below it. */
 export function calKit(level = 1) {
   const g = new THREE.Group();
   const frame = adasFrame({ variant: 'mobile', laserKit: level >= 3 });
@@ -294,7 +281,6 @@ export function calKit(level = 1) {
   return g;
 }
 
-/* ============ Dent repair ============ */
 
 function studGun(bodyMat) {
   const m = mats();
@@ -363,7 +349,6 @@ export function dentPullerS() {
   const m = mats();
   const g = new THREE.Group();
   const W = 0.52, D = 0.48, top = 0.64;
-  // the seated cart: two shelves on four posts, casters and a push handle
   [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sz]) => g.add(at(box(0.03, top - CH, 0.03, m.powder, 0.006), sx * (W / 2 - 0.015), CH + (top - CH) / 2, sz * (D / 2 - 0.015))));
   g.add(casterSet(W / 2 - 0.04, D / 2 - 0.04, CH));
   const low = CH + 0.08;
@@ -376,17 +361,13 @@ export function dentPullerS() {
   const wm = decal(wordmarkTexture('#ffffff'), 0.22, 0.041); wm.rotation.y = Math.PI / 2; at(wm, W / 2 + 0.0005, low + 0.2, -0.04); wm.rotation.y = Math.PI / 2;
   g.add(at(box(0.004, 0.12, D - 0.06, m.powder, 0.002), W / 2 - 0.002, low + 0.2, 0));
   g.add(wm);
-  // the unit seated on the top shelf
   const UH = 0.26;
   const u = welderUnit({ W: 0.36, H: UH, D: 0.4, screen: 'stud' }); at(u, -0.02, top + 0.009, 0.02); g.add(u);
-  // gun in a holster on the right side
   g.add(at(box(0.07, 0.17, 0.1, m.powderDeep, 0.012), W / 2 + 0.04, top - 0.07, 0.12));
   const gun = studGun(); gun.rotation.set(-Math.PI / 2 + 0.25, 0, 0); at(gun, W / 2 + 0.04, top - 0.19, 0.12); gun.rotation.set(-Math.PI / 2 + 0.25, 0, 0); g.add(gun);
   g.add(tube([[0.1, top + 0.06, 0.23], [0.24, top + 0.12, 0.3], [W / 2 + 0.06, top + 0.05, 0.2], [W / 2 + 0.04, top - 0.02, 0.13]], 0.008, m.black));
-  // slide hammer and a stud box on the lower shelf
   const sh = slideHammer(); sh.rotation.set(0, 0.95, 0); at(sh, 0.04, low + 0.04, 0.02); sh.rotation.set(0, 0.95, 0); g.add(sh);
   const sb = group(box(0.18, 0.06, 0.13, m.powder, 0.01), at(box(0.18, 0.01, 0.13, m.signal, 0.003), 0, 0.03, 0)); at(sb, -0.13, low + 0.04, -0.12); g.add(sb);
-  // power cord out of the back
   g.add(tube([[-0.12, top + 0.07, -0.18], [-0.15, top - 0.08, -0.29], [-0.18, 0.08, -0.36], [-0.34, 0.012, -0.52]], 0.007, m.black));
   g.userData = {
     kind: 'dent', hotspots: [
@@ -436,25 +417,18 @@ export function dentPullerS2() {
   const u = welderUnit({ W: 0.5, H: 0.29, D: 0.44, handle: false, screen: 'pro' });
   at(u, 0, bodyY + Hc, -0.02); g.add(u);
   const top = bodyY + Hc + 0.3;
-  // tray on top of unit
   g.add(at(box(0.5, 0.012, 0.44, m.powderDeep, 0.003), 0, top + 0.006, -0.02));
   [[-0.17, 0.06], [-0.04, 0.06], [0.1, 0.07]].forEach(([x, w], i) => g.add(at(box(w + 0.05, 0.05, 0.12, i === 1 ? m.signalMatte : m.plasticGrey, 0.006), x, top + 0.035, 0.08)));
-  // mast and boom
   g.add(at(box(0.04, 0.8, 0.04, m.powder, 0.008), 0, top + 0.4, -D / 2 + 0.03));
   g.add(at(box(0.04, 0.04, 0.3, m.powder, 0.008), 0, top + 0.78, -D / 2 + 0.15));
   g.add(at(box(0.05, 0.08, 0.02, m.signal, 0.006), 0, top + 0.73, -D / 2 + 0.29));
-  // holster on right side with gun
   g.add(at(box(0.08, 0.2, 0.12, m.powderDeep, 0.012), W / 2 + 0.045, bodyY + Hc - 0.12, 0.08));
   const gun = studGun(); at(gun, W / 2 + 0.045, bodyY + Hc - 0.24, 0.08, -Math.PI / 2 + 0.25, 0, 0); gun.rotation.set(-Math.PI / 2 + 0.25, 0, 0); g.add(gun);
-  // cable from unit over boom to gun
   g.add(tube([[0.14, bodyY + Hc + 0.06, 0.2], [0.24, bodyY + Hc + 0.28, 0.28], [0.12, top + 0.68, -D / 2 + 0.29], [0.3, top + 0.5, -0.05], [W / 2 + 0.05, bodyY + Hc + 0.08, 0.04], [W / 2 + 0.05, bodyY + Hc - 0.06, 0.08]], 0.009, m.black, { seg: 120 }));
-  // slide hammer hung on left side
   const sh = slideHammer(); sh.rotation.set(-Math.PI / 2, 0, 0); at(sh, -W / 2 - 0.03, bodyY + Hc - 0.32, 0.1); sh.rotation.set(-Math.PI / 2, 0, 0); g.add(sh);
   g.add(at(box(0.04, 0.03, 0.03, m.steel, 0.006), -W / 2 - 0.02, bodyY + Hc - 0.07, 0.1));
-  // wiggle wire coil on hook
   const coil = mesh(new THREE.TorusGeometry(0.07, 0.006, 8, 40), m.chrome); at(coil, -W / 2 - 0.01, bodyY + 0.38, -0.12, 0, Math.PI / 2, 0); coil.rotation.set(0, Math.PI / 2, 0); g.add(coil);
   const wm = decal(wordmarkTexture('#ffffff'), 0.3, 0.056); wm.rotation.y = Math.PI / 2; at(wm, W / 2 + 0.0015, bodyY + 0.12, -0.05); wm.rotation.y = Math.PI / 2; g.add(wm);
-  // pull bridge lying on the tray behind the bins
   const pb = pullBridge(); pb.rotation.y = Math.PI / 2; at(pb, 0.02, top + 0.012, -0.1); pb.rotation.y = Math.PI / 2; g.add(pb);
   g.userData = {
     kind: 'dent', hotspots: [
@@ -479,23 +453,18 @@ export function dentPullerAL() {
   g.add(at(box(W - 0.08, 0.05, 0.012, m.signal, 0.004), 0, bodyY + 0.3, D / 2 + 0.006));
   const al = decal(labelTexture('AL', { color: '#ff3d1f', w: 256, h: 256, size: 0.78, family: 'Archivo, Arial, sans-serif', weight: 800, align: 'center' }), 0.2, 0.2);
   al.rotation.y = Math.PI / 2; at(al, W / 2 + 0.006, bodyY + Hc * 0.62, 0.05); al.rotation.y = Math.PI / 2; g.add(al);
-  // casters (bigger)
   g.add(casterSet(W / 2 - 0.08, D / 2 - 0.08, bodyY, { wheel: 0.065 }));
-  // console angled
   const con = group(box(W, 0.06, 0.34, m.powder, 0.012));
   const scr = decal(screenTexture('al'), 0.36, 0.225, { emissive: true, transparent: false }); scr.rotation.x = -Math.PI / 2; at(scr, -0.06, 0.0315, 0); scr.rotation.x = -Math.PI / 2; con.add(scr);
   con.add(at(cyl(0.03, 0.02, m.signal, { seg: 28 }), 0.22, 0.04, 0.02));
   con.rotation.x = 0.55; at(con, 0, bodyY + Hc + 0.07, 0.08); con.rotation.x = 0.55; g.add(con);
-  // twin guns on front corners
   [-1, 1].forEach(s => {
     g.add(at(box(0.08, 0.18, 0.1, m.powder, 0.012), s * (W / 2 - 0.06), bodyY + Hc - 0.18, D / 2 + 0.06));
     const gun = s > 0 ? studGun(m.alu) : heatGun(); gun.rotation.set(-Math.PI / 2 + 0.25, 0, 0); at(gun, s * (W / 2 - 0.06), bodyY + Hc - 0.32, D / 2 + 0.06); gun.rotation.set(-Math.PI / 2 + 0.25, 0, 0); g.add(gun);
   });
-  // temperature gauge clipped beside the heat gun
   const tgz = group(box(0.06, 0.11, 0.03, m.plastic, 0.01), at(box(0.062, 0.02, 0.032, m.signal, 0.005), 0, 0.045, 0));
   const tgs = decal(labelTexture('275°F', { color: '#ff3d1f', bg: '#0b0c0e', w: 256, h: 128, size: 0.62, align: 'center' }), 0.046, 0.023); at(tgs, 0, 0.005, 0.0156); tgz.add(tgs);
   at(tgz, -W / 2 + 0.17, bodyY + Hc - 0.12, D / 2 + 0.03); g.add(tgz);
-  // cable reel side
   const reel = ring(0.05, 0.16, 0.06, m.black, { axis: 'x', seg: 48 }); at(reel, -W / 2 - 0.04, bodyY + 0.56, -0.06); g.add(reel);
   g.add(at(cyl(0.05, 0.08, m.signal, { axis: 'x', seg: 28 }), -W / 2 - 0.04, bodyY + 0.56, -0.06));
   const wm = decal(wordmarkTexture('#0d0e10'), 0.36, 0.068); at(wm, 0, bodyY + Hc * 0.66, D / 2 + 0.0075); g.add(wm);
@@ -509,9 +478,7 @@ export function dentPullerAL() {
   return g;
 }
 
-/* ============ Masking & prep ============ */
 
-// one paper roll on its bar: roll, core, tape head, serrated blade and the taped sheet hanging off it
 function paperRoll(g, { W, x0, y, z, w, rr, rearZ, green = false, sheetH = 0.12 }) {
   const m = mats();
   g.add(at(cyl(0.008, W, m.steel, { axis: 'x', seg: 12 }), 0, y, z));
@@ -519,10 +486,8 @@ function paperRoll(g, { W, x0, y, z, w, rr, rearZ, green = false, sheetH = 0.12 
   const pm = green ? m.paperGreen : m.paper;
   g.add(at(cyl(rr, w, pm, { axis: 'x', seg: 48 }), x0 + w / 2, y, z));
   g.add(at(ring(0.019, 0.028, w + 0.006, m.cardboard, { axis: 'x' }), x0 + w / 2, y, z));
-  // tape head
   g.add(at(box(0.05, 0.09, 0.07, m.signal, 0.01), x0 - 0.01, y + 0.005, z + rr + 0.045));
   g.add(at(ring(0.022, 0.046, 0.025, m.tape, { axis: 'x' }), x0 + 0.03, y + 0.012, z + rr + 0.068));
-  // blade + sheet
   const bladeY = y - rr - 0.022, bladeZ = z + rr + 0.055;
   g.add(at(box(w + 0.03, 0.012, 0.032, m.steel, 0.002), x0 + w / 2, bladeY, bladeZ));
   const sheet = new THREE.Mesh(new THREE.PlaneGeometry(w, sheetH, 1, 6), pm);
@@ -532,7 +497,6 @@ function paperRoll(g, { W, x0, y, z, w, rr, rearZ, green = false, sheetH = 0.12 
   sheet.castShadow = true; sheet.receiveShadow = true;
   sheet.position.set(x0 + w / 2, bladeY - sheetH / 2 + 0.004, bladeZ + 0.018);
   g.add(sheet);
-  // web of paper running from the roll over the blade
   const sy = y - rr * 0.35, sz = z + rr * 0.94, ey = bladeY + 0.007, ez = bladeZ + 0.016;
   const webLen = Math.hypot(ey - sy, ez - sz);
   const web = new THREE.Mesh(new THREE.PlaneGeometry(w, webLen), pm);
@@ -543,7 +507,6 @@ function paperRoll(g, { W, x0, y, z, w, rr, rearZ, green = false, sheetH = 0.12 
   return { hook: [x0 - 0.01, y + 0.06, z + rr + 0.09], blade: [x0 + w * 0.3, bladeY, bladeZ + 0.02] };
 }
 
-/** Rolling masker. widths in meters, front roll first. film adds a plastic roll on top; tall is the heavy-duty frame. */
 export function maskingMachine({ widths = [0.9, 0.45, 0.3], film = false, tall = false, storage = false } = {}) {
   const m = mats();
   const g = new THREE.Group();
@@ -591,7 +554,6 @@ export function maskingMachine({ widths = [0.9, 0.45, 0.3], film = false, tall =
   }
   let shelfPt = null;
   if (storage) {
-    // lower shelf with spare rolls and a box of tape
     const sy = CH + 0.075;
     g.add(at(box(W - 0.06, 0.018, D - 0.14, m.powderDeep, 0.004), 0, sy, -0.04));
     g.add(at(box(W - 0.06, 0.04, 0.012, m.powder, 0.004), 0, sy + 0.02, -0.04 - (D - 0.14) / 2));
@@ -608,7 +570,6 @@ export function maskingMachine({ widths = [0.9, 0.45, 0.3], film = false, tall =
   return g;
 }
 
-/** Two-roll masker for the wall or the bench (36 and 18 in). Sits on its bench feet; the back plate bolts to a wall. */
 export function wallMasker() {
   const m = mats();
   const g = new THREE.Group();
@@ -628,7 +589,6 @@ export function wallMasker() {
   return g;
 }
 
-/* ============ Tool carts ============ */
 
 export function toolCart({ drawers = 5, width = 0.76, height = 0.86, depth = 0.47, pro = false, locking = false } = {}) {
   const m = mats();
@@ -668,7 +628,6 @@ export function toolCart({ drawers = 5, width = 0.76, height = 0.86, depth = 0.4
   if (pro) {
     g.add(at(box(0.04, 0.32, 0.06, m.powderDeep, 0.008), -width / 2 - 0.022, bodyY + height * 0.5, depth / 2 - 0.08));
     for (let i = 0; i < 4; i++) g.add(at(box(0.008, 0.035, 0.03, m.signal, 0.004), -width / 2 - 0.044, bodyY + height * 0.5 - 0.11 + i * 0.07, depth / 2 - 0.08));
-    // open side bin
     const bx = -width / 2 - 0.085, by = bodyY + height * 0.84, bd = depth - 0.16;
     g.add(at(box(0.15, 0.008, bd, m.powderDeep, 0.002), bx, by - 0.055, -0.02));
     g.add(at(box(0.008, 0.11, bd, m.powder, 0.003), bx - 0.071, by, -0.02));
@@ -690,14 +649,12 @@ export function calCart() {
   const W = 0.64, D = 0.5;
   const g = toolCart({ drawers: 3, width: W, height: 0.78, depth: D });
   const topY = g.userData.topY;
-  // tablet mount on a post at the back corner
   g.add(at(box(0.042, 0.46, 0.042, m.powder, 0.008), 0.24, topY + 0.25, -0.19));
   const arm = group(at(box(0.05, 0.04, 0.14, m.powderDeep, 0.008), 0, 0, 0.06));
   const tab = group(box(0.4, 0.27, 0.024, m.plastic, 0.016));
   const scr = decal(screenTexture('cal'), 0.37, 0.231, { emissive: true, transparent: false }); at(scr, 0, 0, 0.0125); tab.add(scr);
   tab.rotation.set(-0.18, 0, 0); at(tab, -0.06, 0.03, 0.14); tab.rotation.set(-0.18, 0, 0); arm.add(tab);
   arm.rotation.set(0, -0.3, 0); at(arm, 0.24, topY + 0.47, -0.19); arm.rotation.set(0, -0.3, 0); g.add(arm);
-  // battery maintainer shelf on the left side
   const sx = -W / 2 - 0.13, sy = topY - 0.4, sd = D - 0.12;
   g.add(at(box(0.25, 0.018, sd, m.powderDeep, 0.004), sx + 0.005, sy, 0));
   g.add(at(box(0.012, 0.05, sd, m.powder, 0.004), sx - 0.12, sy + 0.025, 0));
@@ -706,7 +663,6 @@ export function calCart() {
   const bm = group(box(0.17, 0.09, 0.25, m.plastic, 0.018), at(box(0.172, 0.018, 0.252, m.signal, 0.006), 0, 0.036, 0));
   const bs = decal(screenTexture('batt'), 0.13, 0.081, { emissive: true, transparent: false }); bs.rotation.y = -Math.PI / 2; at(bs, -0.0856, -0.006, 0.0); bs.rotation.y = -Math.PI / 2; bm.add(bs);
   at(bm, sx + 0.01, sy + 0.009 + 0.045, 0.0); g.add(bm);
-  // cable and clamps hanging over the shelf edge
   g.add(tube([[sx - 0.02, sy + 0.06, 0.13], [sx - 0.12, sy + 0.05, 0.17], [sx - 0.15, sy - 0.12, 0.16], [sx - 0.13, sy - 0.28, 0.12]], 0.006, m.black));
   g.add(tube([[sx - 0.02, sy + 0.06, 0.1], [sx - 0.12, sy + 0.04, 0.12], [sx - 0.16, sy - 0.1, 0.08], [sx - 0.15, sy - 0.24, 0.05]], 0.006, m.black));
   [[0.12, m.signal], [0.05, m.black]].forEach(([z, mm], i) => { const c = box(0.03, 0.07, 0.02, mm, 0.006); at(c, sx - 0.14 + i * 0.01, sy - 0.3 + i * 0.04, z); g.add(c); });
@@ -719,7 +675,6 @@ export function calCart() {
   return g;
 }
 
-/* ============ Racks & storage ============ */
 
 export function partsCart() {
   const m = mats();
@@ -839,7 +794,6 @@ export function bumperRack() {
   g.add(at(box(L, 0.05, 0.05, m.powder, 0.01), 0, CH + 0.05 + H, 0));
   g.add(at(box(L, 0.04, 0.04, m.powder, 0.008), 0, CH + 0.12, 0));
   [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sz], i) => { const c = caster(CH, { brake: i >= 2 }); c.position.set(sx * L / 2, 0, sz * (D / 2 - 0.05)); g.add(c); });
-  // covers hang face-out on the arm ends: two on the front, two on the back
   const hang = [[1, 3, m.paintWhite], [1, 1, m.paintRed], [-1, 2, m.primer], [-1, 0, m.paintBlack]];
   hang.forEach(([side, i, mat]) => {
     const b = bumperCover(mat);
@@ -883,7 +837,6 @@ export function doorRack({ slots = 4, L = 1.3 } = {}) {
   return g;
 }
 
-/* ============ registry ============ */
 
 export const BUILDERS = {
   'cal-1': () => calKit(1),
@@ -900,7 +853,6 @@ export const BUILDERS = {
   'rack-b8': () => bumperRack(),
   'rack-ps': () => partsCart(),
   'rack-p6': () => doorRack({ slots: 6, L: 1.56 }),
-  // the pieces of the CAL kits, placed one by one in the bay builder
   'p-frame': () => adasFrame({ variant: 'mobile', laserKit: false }),
   'p-frame-x': () => adasFrame({ variant: 'mobile', laserKit: true }),
   'p-ldw': () => ldwStand(),

@@ -1,5 +1,3 @@
-// Live scenes: the "Build your bay" scene (also the home page's hero), the older hero and viewer scenes,
-// and the studio renderer used to make still images.
 import { THREE, mats, shopEnvironment, frameObject, blobTexture, glowTexture, easeOutCubic, easeInOutCubic } from './three-kit.js';
 import { build, adasFrame } from './models.js';
 import { buildMT } from './catalog-models.js';
@@ -17,9 +15,7 @@ export function makeRenderer({ alpha = true, preserve = false } = {}) {
   return r;
 }
 
-/* ---------- helpers ---------- */
 
-/** Merge a model's static meshes by material to cut draw calls. Emissive/decal meshes stay separate. */
 export function optimize(root, { keepNames = [] } = {}) {
   root.updateMatrixWorld(true);
   const inv = new THREE.Matrix4().copy(root.matrixWorld).invert();
@@ -49,7 +45,6 @@ export function optimize(root, { keepNames = [] } = {}) {
     const me = new THREE.Mesh(merged, mat); me.castShadow = true; me.receiveShadow = true;
     root.add(me);
   }
-  // drop now-empty groups
   const empties = [];
   root.traverse(o => { if (o !== root && o.isGroup && o.children.length === 0) empties.push(o); });
   empties.forEach(o => o.parent && o.parent.remove(o));
@@ -115,7 +110,6 @@ export const VIEW_PRESETS = {
   'rack-p6': { azimuth: 0.95, elevation: 0.22, padding: 1.04 },
 };
 
-/* ---------- studio renders (product images) ---------- */
 
 export function createStudioRenderer({ width = 1400, height = 1050, dark = false } = {}) {
   const renderer = makeRenderer({ alpha: true, preserve: true });
@@ -144,7 +138,6 @@ export function createStudioRenderer({ width = 1400, height = 1050, dark = false
   };
 }
 
-/* ---------- shared bay set ---------- */
 
 function epoxyFloor(size = 60, color = '#0b0c0e', envI = 0.35) {
   const m = new THREE.MeshStandardMaterial({ color, roughness: 0.42, metalness: 0.0, envMapIntensity: envI });
@@ -180,7 +173,6 @@ function laserMaterial(intensity = 4) {
   return new THREE.MeshBasicMaterial({ color: new THREE.Color('#ff3d1f').multiplyScalar(intensity), toneMapped: false, transparent: true, depthWrite: false });
 }
 
-/** Laser line on the floor + glow + fan from the emitter. Returns group with .setProgress(0..1) */
 function laserLine(emitter, zStart, length, { x = 0, width = 0.007, glow = 0.14, fan = true, intensity = 4 } = {}) {
   const g = new THREE.Group();
   const geo = new THREE.PlaneGeometry(width, 1); geo.translate(0, -0.5, 0);
@@ -217,7 +209,6 @@ function laserLine(emitter, zStart, length, { x = 0, width = 0.007, glow = 0.14,
   return g;
 }
 
-/** Wireframe vehicle used to show where the car sits relative to the equipment. Front faces +Z. */
 export function ghostCar() {
   const prof = [[2.36, 0.3], [2.41, 0.5], [2.3, 0.71], [1.22, 0.86], [0.48, 1.38], [-0.72, 1.43], [-1.66, 1.07], [-2.3, 0.99], [-2.4, 0.6], [-2.32, 0.32]];
   const halfAt = y => 0.9 - Math.max(0, y - 0.9) * 0.36;
@@ -227,9 +218,7 @@ export function ghostCar() {
   const seg = (a, b) => pts.push(a.x, a.y, a.z, b.x, b.y, b.z);
   [L, R].forEach(S => { for (let i = 0; i < S.length; i++) seg(S[i], S[(i + 1) % S.length]); });
   for (let i = 0; i < L.length; i++) seg(L[i], R[i]);
-  // belt line + rocker
   [-1, 1].forEach(s => { seg(new THREE.Vector3(s * 0.9, 0.9, -2.3), new THREE.Vector3(s * 0.9, 0.9, 1.22)); });
-  // wheels
   [[-1, 1.42], [1, 1.42], [-1, -1.42], [1, -1.42]].forEach(([s, z]) => {
     const n = 28;
     for (let i = 0; i < n; i++) {
@@ -240,7 +229,6 @@ export function ghostCar() {
   const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
   const lines = new THREE.LineSegments(geo, new THREE.LineBasicMaterial({ color: '#b9c8d8', transparent: true, opacity: 0.5, depthWrite: false }));
   const g = new THREE.Group(); g.add(lines);
-  // footprint on the floor
   const fp = new THREE.Group();
   fp.add(floorLine(-0.92, -2.4, -0.92, 2.4, 0.012, '#9fb0c2', 0.45));
   fp.add(floorLine(0.92, -2.4, 0.92, 2.4, 0.012, '#9fb0c2', 0.45));
@@ -260,7 +248,6 @@ function sensorCone(origin, target, radius, color = 0xff3d1f, opacity = 0.14) {
   return m;
 }
 
-/** Thin wireframe pyramid from a sensor to its calibration target (what the camera or radar 'sees'). */
 function fovLines(origin, center, w, h) {
   const o = new THREE.Vector3(...origin), c = new THREE.Vector3(...center);
   const corners = [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([sx, sy]) => new THREE.Vector3(c.x + sx * w / 2, c.y + sy * h / 2, c.z));
@@ -275,7 +262,6 @@ function fovLines(origin, center, w, h) {
   return g;
 }
 
-/* ---------- interaction: drag to orbit ---------- */
 
 function orbitDrag(el, state, { minAz = -1.2, maxAz = 1.2, minEl = 0.04, maxEl = 0.55, onStart, onMove } = {}) {
   let down = null;
@@ -291,7 +277,7 @@ function orbitDrag(el, state, { minAz = -1.2, maxAz = 1.2, minEl = 0.04, maxEl =
       if (Math.abs(dy) > Math.abs(dx)) { down = null; return; }
       down.decided = true;
     }
-    if (el.setPointerCapture && !el.hasPointerCapture(e.pointerId)) { try { el.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ } }
+    if (el.setPointerCapture && !el.hasPointerCapture(e.pointerId)) { try { el.setPointerCapture(e.pointerId); } catch (err) {   } }
     state.tAz = THREE.MathUtils.clamp(down.az - dx * 0.006, minAz, maxAz);
     state.tEl = THREE.MathUtils.clamp(down.el + dy * 0.004, minEl, maxEl);
     state.lastInput = performance.now();
@@ -327,7 +313,6 @@ function loopController(host, tick) {
   return { start, stop() { if (raf) cancelAnimationFrame(raf); raf = 0; running = false; io.disconnect(); document.removeEventListener('visibilitychange', vis); } };
 }
 
-/* ---------- hero: calibration bay at night ---------- */
 
 export function createHero(host, { hud = {}, callouts = [], reducedMotion = false, layout = () => 'wide' } = {}) {
   const renderer = makeRenderer({ alpha: false });
@@ -360,7 +345,6 @@ export function createHero(host, { hud = {}, callouts = [], reducedMotion = fals
   rim.position.set(-1.6, 4.6, -3.6); rim.target.position.set(0, 1.5, 0); scene.add(rim, rim.target);
   const kick = new THREE.SpotLight(0x9fb6cc, 18, 12, 0.4, 0.8, 1.5);
   kick.position.set(4.5, 2.2, 1.5); kick.target.position.set(0, 1.2, 0); scene.add(kick, kick.target);
-  // overhead LED bars (visible in reflections and at frame top)
   const ledMat = new THREE.MeshBasicMaterial({ color: new THREE.Color('#ffffff').multiplyScalar(2.2), toneMapped: false });
   for (let i = 0; i < 3; i++) { const bar = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.04, 0.16), ledMat); bar.position.set(0, 4.6, -1.5 + i * 2.6); scene.add(bar); }
 
@@ -386,7 +370,6 @@ export function createHero(host, { hud = {}, callouts = [], reducedMotion = fals
     camera.aspect = w / h;
     const mode = layout();
     if (mode === 'wide') {
-      // shift the frame into the right half so the headline owns the left
       const shift = w * 0.21;
       camera.setViewOffset(w, h, -shift, 0, w, h);
       state.dist = 7.0;
@@ -405,13 +388,12 @@ export function createHero(host, { hud = {}, callouts = [], reducedMotion = fals
   const placeCallouts = () => {
     anchors.forEach(a => {
       const p = a.v.clone();
-      if (a.n === 1 || a.n === 2 || a.n === 4) p.y += H() - frame.userData.lift; // anchors on the carriage move with it
+      if (a.n === 1 || a.n === 2 || a.n === 4) p.y += H() - frame.userData.lift;
       p.project(camera);
       const x = (p.x * 0.5 + 0.5) * w, y = (-p.y * 0.5 + 0.5) * h;
       const vis = p.z < 1 && x > 8 && x < w - 8 && y > 8 && y < h - 8;
       a.el.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0)`;
       a.el.classList.toggle('is-off', !vis);
-      // keep the label on screen: flip it to the other side of its dot when it would run off the edge
       if (!a.sw && a.span) a.sw = a.span.offsetWidth;
       if (a.sw) {
         let left = a.left0;
@@ -424,7 +406,6 @@ export function createHero(host, { hud = {}, callouts = [], reducedMotion = fals
 
   const tick = (dt, now) => {
     const t = (now - t0) / 1000;
-    // intro: lift rises, lasers draw
     const pLift = INTRO ? easeInOutCubic(THREE.MathUtils.clamp(t / 1.8, 0, 1)) : 1;
     const hNow = 0.85 + (H_FINAL - 0.85) * pLift;
     carriage.position.y = hNow;
@@ -438,7 +419,6 @@ export function createHero(host, { hud = {}, callouts = [], reducedMotion = fals
     if (t > (INTRO ? 2.9 : 0)) { setHud('status', 'CENTERLINE LOCKED'); host.classList.add('is-locked'); }
     else setHud('status', pLift < 1 ? 'LIFT TO SPEC' : 'PROJECTING CENTERLINE');
 
-    // camera: idle sway unless the visitor is dragging
     const idle = now - state.lastInput > 3500;
     if (idle) { state.tAz += ((0.42 + Math.sin(t * 0.18) * 0.12) - state.tAz) * 0.02; state.tEl += (0.15 - state.tEl) * 0.02; }
     state.az += (state.tAz - state.az) * Math.min(1, dt * 5);
@@ -468,7 +448,6 @@ export function createHero(host, { hud = {}, callouts = [], reducedMotion = fals
   };
 }
 
-/* ---------- product turntable viewer ---------- */
 
 export function createViewer(host, id, { hotspotLayer = null, onHotspots = null, reducedMotion = false } = {}) {
   const renderer = makeRenderer({ alpha: true });
@@ -536,9 +515,7 @@ export function createViewer(host, id, { hotspotLayer = null, onHotspots = null,
   };
 }
 
-/* ---------- Build your bay ---------- */
 
-// where each catalog product stands on the bay floor: [x, z, turn]. A second unit takes the next spot.
 const SLOTS = {
   'mt-spotter': [[-1.9, 0.75, -0.8]],
   'mt-arcpuller': [[-1.95, -0.5, -0.75]],
@@ -560,9 +537,6 @@ export const BAY_ZONES = {
   racks: { pos: [3.2, 3.6, 3.2], look: [0.4, 0.9, -4.4] },
 };
 
-// options used only by the home page hero (the builder page leaves them off and looks and moves as before):
-//   drift: a slow camera sway while nobody is dragging; shiftX: moves the bay right to clear the headline (0 to 0.5);
-//   onFrame(anchors): called after each frame with every placed piece's tag point on screen.
 export function createBay(host, { reducedMotion = false, onReady = null, drift = false, shiftX = 0, onFrame = null } = {}) {
   const renderer = makeRenderer({ alpha: false });
   renderer.domElement.className = 'gl';
@@ -575,7 +549,6 @@ export function createBay(host, { reducedMotion = false, onReady = null, drift =
   scene.environmentIntensity = 0.6;
   scene.add(epoxyFloor(80));
   scene.add(bayMarkings({ halfW: 2.6, z0: -5.4, z1: 6.6 }));
-  // back wall line + a second bay to the right for scale
   scene.add(floorLine(-6, -5.25, 6, -5.25, 0.06, '#d6a20a', 0.6));
   scene.add(floorLine(7.9, -5.4, 7.9, 6.6, 0.1, '#d6a20a', 0.8));
   const wallMat = new THREE.MeshStandardMaterial({ color: '#121418', roughness: 0.85 });
@@ -596,18 +569,16 @@ export function createBay(host, { reducedMotion = false, onReady = null, drift =
   const view = { pos: new THREE.Vector3(...BAY_ZONES.overview.pos), look: new THREE.Vector3(...BAY_ZONES.overview.look), tPos: new THREE.Vector3(...BAY_ZONES.overview.pos), tLook: new THREE.Vector3(...BAY_ZONES.overview.look) };
   const orbit = { az: 0, el: 0, tAz: 0, tEl: 0, lastInput: 0 };
 
-  const instances = new Map(); // key id#i -> {obj, born, dying}
+  const instances = new Map();
   const pulses = [];
   let w = 1, h = 1;
   let shift = shiftX;
   const resize = () => {
     w = Math.max(1, host.clientWidth); h = Math.max(1, host.clientHeight);
-    // a phone-size canvas renders at the screen's full sharpness (up to 3x); a big desktop canvas stays at 1.75x
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, w * h < 640000 ? 3 : 1.75));
     renderer.setSize(w, h, false);
     camera.fov = w / h < 1 ? 42 : 30;
     if (shift > 0) {
-      // render the left part of a wider frame: the bay's center lands right of the middle
       const fw = w * (1 + shift);
       camera.aspect = fw / h; camera.setViewOffset(fw, h, 0, 0, w, h);
     } else { camera.aspect = w / h; camera.clearViewOffset(); }
@@ -630,14 +601,12 @@ export function createBay(host, { reducedMotion = false, onReady = null, drift =
   let selection = {};
   const setSelection = (sel, { animate = true } = {}) => {
     selection = { ...sel };
-    const want = new Map(); // key -> [part, x, z, ry]
+    const want = new Map();
     Object.entries(selection).forEach(([id, qty]) => {
       const slots = SLOTS[id]; if (!slots || !qty) return;
       for (let i = 0; i < Math.min(qty, slots.length); i++) want.set(`${id}#${i}`, [id, ...slots[i]]);
     });
-    // remove
     for (const [key, inst] of instances) if (!want.has(key) && !inst.dying) { inst.dying = performance.now(); }
-    // add
     for (const [key, [id, x, z, ry]] of want) {
       if (instances.has(key)) { const inst = instances.get(key); if (inst.dying) { inst.dying = 0; inst.obj.position.y = 0; inst.obj.scale.setScalar(1); } continue; }
       const proto = getProto(id); if (!proto) continue;
@@ -683,7 +652,6 @@ export function createBay(host, { reducedMotion = false, onReady = null, drift =
     if (view.pos.distanceTo(view.tPos) > 0.002 || view.look.distanceTo(view.tLook) > 0.002) busy = true;
     orbit.az += (orbit.tAz - orbit.az) * Math.min(1, dt * 6); orbit.el += (orbit.tEl - orbit.el) * Math.min(1, dt * 6);
     if (Math.abs(orbit.tAz - orbit.az) > 0.0005 || Math.abs(orbit.tEl - orbit.el) > 0.0005) busy = true;
-    // orbit offsets around look point
     const off = view.pos.clone().sub(view.look);
     const sph = new THREE.Spherical().setFromVector3(off);
     sph.theta += orbit.az; sph.phi = THREE.MathUtils.clamp(sph.phi - orbit.el, 0.25, 1.45);
@@ -709,7 +677,7 @@ export function createBay(host, { reducedMotion = false, onReady = null, drift =
       if (p >= 1) { scene.remove(pu.m); pu.m.material.dispose(); pulses.splice(i, 1); } else busy = true;
     }
     renderer.render(scene, camera);
-    if (onFrame) { try { onFrame(anchors()); } catch (e) { /* a tag layer error never stops the scene */ } }
+    if (onFrame) { try { onFrame(anchors()); } catch (e) {   } }
     return busy || now - orbit.lastInput < 200;
   };
   let loop = null;

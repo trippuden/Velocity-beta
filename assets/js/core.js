@@ -1,12 +1,9 @@
-// Shared helpers: escaping, the quote list, lead capture, small UI pieces.
 import { SITE, SOURCES } from './data.js';
 
-/* ---------- text ---------- */
 
 const ESC = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
 export const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ESC[c]);
 
-// rich text: a string, a placeholder from ph(), or an array of either
 export function rt(x) {
   if (x == null) return '';
   if (Array.isArray(x)) return x.map(rt).join('');
@@ -18,12 +15,8 @@ export const plain = (x) => (x == null ? '' : Array.isArray(x) ? x.map(plain).jo
 export const pad2 = (n) => String(n).padStart(2, '0');
 export const num = (n) => Number(n || 0).toLocaleString('en-US');
 
-/* ---------- quote list (kept in this browser only, as an unsent draft) ---------- */
 
-// v2: lines are the catalog's part numbers. A quote saved under the old kit list starts fresh.
 const KEY = 'velocity.quote.v2';
-// a line is a part number in whatever format its brand prints (SP202002, 48-22-9000) or a product family id (F058).
-// The quote page shows only the lines the catalog knows, so this check just keeps junk out of the saved list.
 export const isItemId = (id) => typeof id === 'string' && /^[A-Za-z0-9][A-Za-z0-9 ./+_-]{1,39}$/.test(id);
 const listeners = new Set();
 export const quote = {
@@ -36,9 +29,9 @@ export const quote = {
       const o = JSON.parse(raw);
       (o.items || []).forEach(([id, q]) => { if (isItemId(id) && q > 0) this.items.set(id, Math.min(999, q | 0)); });
       this.source = o.source || '';
-    } catch { /* storage unavailable: start empty */ }
+    } catch {   }
   },
-  save() { try { localStorage.setItem(KEY, JSON.stringify({ items: [...this.items], source: this.source })); } catch { /* ignore */ } },
+  save() { try { localStorage.setItem(KEY, JSON.stringify({ items: [...this.items], source: this.source })); } catch {   } },
   set(id, qty) {
     if (!isItemId(id)) return;
     qty = Math.max(0, Math.min(999, qty | 0));
@@ -54,20 +47,19 @@ export const quote = {
   emit() { listeners.forEach(fn => { try { fn(); } catch (e) { console.error(e); } }); },
 };
 
-/* ---------- platform: shared database and viewer (only inside the published page) ---------- */
 
 const withTimeout = (p, ms, fallback) => Promise.race([p, new Promise(r => setTimeout(() => r(fallback), ms))]);
 let dbP = null, userP = null;
 export function getDb() {
   if (!dbP) dbP = (async () => {
-    try { return null; /* standalone copy: no db service, forms show the not-sent panel */ }
+    try { return null;   }
     catch { return null; }
   })();
   return dbP;
 }
 export function getUser() {
   if (!userP) userP = (async () => {
-    try { return null; /* standalone copy: no user service, forms show the not-sent panel */ }
+    try { return null;   }
     catch { return null; }
   })();
   return userP;
@@ -85,9 +77,6 @@ export function makeRef(prefix) {
   return `${prefix}-${[...b].map(x => A[x % A.length]).join('')}`;
 }
 
-// Saves a lead to the private inbox when this page is running where it can. Never claims a send that did not happen.
-// Each visitor writes only their own document, leads/<their id>, holding their requests by reference number.
-// The page declares rules so that only the owner and editors can read the whole inbox.
 export async function saveLead(lead) {
   const [db, u] = await Promise.all([getDb(), getUser()]);
   if (!db || !u) return { ok: false, reason: 'unavailable' };
@@ -112,7 +101,6 @@ export async function saveLead(lead) {
   }
 }
 
-// How warm a lead is. Visible only in the inbox.
 export function scoreLead({ timeline, role, bays, lines = 0, units = 0, type }) {
   let s = 0;
   s += { now: 30, '30': 22, '90': 12, research: 2 }[timeline] ?? 8;
@@ -125,7 +113,6 @@ export function scoreLead({ timeline, role, bays, lines = 0, units = 0, type }) 
   return { score: s, tier: s >= 60 ? 'hot' : s >= 35 ? 'warm' : 'cool' };
 }
 
-/* ---------- icons ---------- */
 
 const I = {
   arrow: '<path d="M4 10h11M11 5l5 5-5 5"/>',
@@ -149,9 +136,7 @@ const I = {
 };
 export const icon = (name, cls = '') => `<svg class="ic ${cls}" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="square" aria-hidden="true">${I[name] || ''}</svg>`;
 
-/* ---------- small pieces ---------- */
 
-// calibration-target checker, n x n
 export function checker(n = 4, size = 28, cls = '') {
   let r = '';
   for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if ((x + y) % 2 === 0) r += `<rect x="${x}" y="${y}" width="1" height="1"/>`;
@@ -180,7 +165,6 @@ export function stepper(id, qty, { max = 99, label = '' } = {}) {
   </div>`;
 }
 
-// add-to-quote control for one part number (or a family id for products with no number)
 export function addButton(id, label, { big = false, text = 'Add to quote' } = {}) {
   const q = quote.qty(id);
   return `<div class="addq ${q ? 'is-in' : ''} ${big ? 'addq--big' : ''}" data-addq="${esc(id)}">
@@ -189,7 +173,6 @@ export function addButton(id, label, { big = false, text = 'Add to quote' } = {}
   </div>`;
 }
 
-// keep every add-to-quote control on screen in sync with the quote list
 export function syncAddButtons(root = document) {
   root.querySelectorAll('[data-addq]').forEach(el => {
     const id = el.dataset.addq, q = quote.qty(id);
@@ -200,7 +183,6 @@ export function syncAddButtons(root = document) {
   root.querySelectorAll('[data-qmark]').forEach(el => { const q = quote.qty(el.dataset.qmark); el.hidden = !q; el.textContent = q ? `×${q}` : ''; });
 }
 
-/* ---------- toasts ---------- */
 
 export function toast(html, { action = null, ms = 4200 } = {}) {
   const region = document.getElementById('toasts');
@@ -213,7 +195,6 @@ export function toast(html, { action = null, ms = 4200 } = {}) {
   setTimeout(() => { t.classList.remove('is-in'); setTimeout(() => t.remove(), 400); }, ms);
 }
 
-/* ---------- forms ---------- */
 
 export function readForm(form) {
   const o = {};
@@ -254,7 +235,6 @@ export async function copyText(text, btn) {
   } catch { return false; }
 }
 
-// what a visitor sees when the request could not be delivered from this preview
 export function notSentPanel(summary) {
   return `<div class="notsent">
     <p class="notsent__title">${icon('mail')} This preview cannot send requests yet.</p>
@@ -264,10 +244,7 @@ export function notSentPanel(summary) {
   </div>`;
 }
 
-/* ---------- text box hints ---------- */
 
-// A hint cut off mid-word reads as broken, most of all on a phone. The hints run longest first and the box shows
-// the first one that fits in its own type at its own width; it picks again when the box changes size.
 export function fitHint(input, hints) {
   const probe = document.createElement('span');
   probe.setAttribute('aria-hidden', 'true');
@@ -282,7 +259,6 @@ export function fitHint(input, hints) {
     if (w) {
       const cs = getComputedStyle(input);
       for (const k of ['fontFamily', 'fontSize', 'fontWeight', 'fontStyle', 'fontStretch', 'letterSpacing', 'textTransform']) probe.style[k] = cs[k];
-      // a search box keeps room at its end for the browser's own clear button, even while it is empty
       const room = w - parseFloat(cs.paddingLeft || 0) - parseFloat(cs.paddingRight || 0) - (input.type === 'search' ? 26 : 2);
       document.body.appendChild(probe);
       pick = hints[hints.length - 1];
@@ -292,22 +268,18 @@ export function fitHint(input, hints) {
     if (input.placeholder !== pick) input.placeholder = pick;
   };
   fit();
-  // the site's typeface can arrive after the first measure: measure again once it is in
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit).catch(() => {});
   if ('ResizeObserver' in window) { ro = new ResizeObserver(fit); ro.observe(input); }
   return stop;
 }
-// every box under root that lists its hints in data-hints ("long|shorter|shortest")
 export function fitHints(root) {
   const offs = [...root.querySelectorAll('input[data-hints]')].map(i => fitHint(i, i.dataset.hints.split('|').map(s => s.trim()).filter(Boolean)));
   return () => offs.forEach(f => f());
 }
 
-/* ---------- motion ---------- */
 
 export const reducedMotion = () => window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-// reveal-on-scroll for elements with [data-reveal]
 export function revealIn(root) {
   const els = root.querySelectorAll('[data-reveal]');
   if (!('IntersectionObserver' in window) || reducedMotion()) { els.forEach(e => e.classList.add('is-in')); return () => {}; }
@@ -316,7 +288,6 @@ export function revealIn(root) {
   return () => io.disconnect();
 }
 
-// count-up numbers for [data-count]
 export function countUp(root) {
   const els = root.querySelectorAll('[data-count]');
   if (!('IntersectionObserver' in window) || reducedMotion()) return () => {};
@@ -337,7 +308,6 @@ export function countUp(root) {
   return () => io.disconnect();
 }
 
-/* ---------- 3D loader ---------- */
 
 let scenesP = null;
 export function loadScenes() {
@@ -348,12 +318,10 @@ export function webglOK() {
   try { const c = document.createElement('canvas'); return !!(c.getContext('webgl2') || c.getContext('webgl')); } catch { return false; }
 }
 
-/* ---------- lead forms (quote, training, dealer, support) ---------- */
 
 let editorP = null;
 const isEditor = () => (editorP = editorP || viewerCanEdit());
 
-// build(data, ref) -> { lead, summary }. Saves to the private inbox when this page can; otherwise says plainly nothing was sent.
 export function bindLeadForm(form, { type, prefix, build, success }) {
   const host = form.closest('[data-form-host]') || form.parentElement;
   form.addEventListener('submit', async (e) => {
@@ -393,7 +361,6 @@ export function bindLeadForm(form, { type, prefix, build, success }) {
   });
 }
 
-// the contact block every form shares
 export function contactFields({ roleOptions = null, zip = true } = {}) {
   const roles = roleOptions || [['owner', 'Owner'], ['manager', 'Shop or body shop manager'], ['parts', 'Parts or purchasing'], ['estimator', 'Estimator'], ['tech', 'Body tech'], ['painter', 'Painter'], ['mso', 'MSO / multi-location'], ['dealer', 'Dealer or distributor'], ['other', 'Other']];
   return `

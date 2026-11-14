@@ -1,6 +1,3 @@
-// The quote: a list of catalog part numbers (or product families a catalog prints no number for), each with its
-// brand, anything the shop wants that isn't in the catalog, and the shop's details. Velocity prices it in writing.
-// No prices on the site.
 import { esc, icon, quote, stepper, bindLeadForm, contactFields, contactSummary, scoreLead, getDb, viewerCanEdit, copyText } from '../core.js';
 import { catalog, resolveItem, famHref, famPack, loaded } from '../catalog-data.js';
 import { crumbs, photo } from './catalog.js';
@@ -54,7 +51,6 @@ export const quotePage = {
       const n = quote.count();
       el.querySelector('[data-qcount-label]').textContent = lines.length ? `${lines.length} line${lines.length === 1 ? '' : 's'} · ${n} item${n === 1 ? '' : 's'}` : '';
       el.querySelector('[data-source]').textContent = quote.source ? `Started from: ${quote.source}.` : '';
-      // an empty list carries its own ways in, so the row of shortcuts under it shows only once there is a list
       el.querySelector('[data-qtools]').hidden = !lines.length;
       if (!lines.length) {
         list.innerHTML = `<div class="qempty"><p>Nothing on your list yet. Add part numbers from the catalog, start from a bay, or just send the form with what you’re looking for in the notes.</p><div class="row-gap" style="margin-top:0"><a class="btn btn--ink" href="#catalog">Open the catalog ${icon('arrow')}</a><a class="btn btn--line" href="#bay">Build your bay</a><a class="btn btn--line" href="#search">${icon('search')}<span>Search part numbers</span></a></div></div>`;
@@ -84,17 +80,14 @@ export const quotePage = {
     catalog().then(() => { if (!gone) paint(); }).catch(() => {});
 
     const form = el.querySelector('[data-quote-form]');
-    // a link that asked for something the catalog doesn't list ("Ask for Milwaukee on a quote") starts that line
-    // under "Not in the catalog?" and says so at the top, where a phone lands
     let note = '';
-    try { note = sessionStorage.getItem('velocity.quote.note') || ''; sessionStorage.removeItem('velocity.quote.note'); } catch { /* storage off */ }
+    try { note = sessionStorage.getItem('velocity.quote.note') || ''; sessionStorage.removeItem('velocity.quote.note'); } catch {   }
     note = note.slice(0, 120);
     if (note.trim()) {
       const box = form.extra;
       if (!box.value.includes(note.trim())) box.value = box.value ? `${box.value.replace(/\s+$/, '')}\n${note}` : note;
       const what = note.trim().replace(/:$/, '');
       el.querySelector('[data-qhint]').innerHTML = `<p class="note qhint">${icon('plus')}<span><b>${esc(what)}</b> is started on your quote under “Not in the catalog?”. Add the tools or part numbers you want and how many.</span><a class="link-arrow" href="#q-extra" data-scroll="q-extra">Go to it ${icon('arrow')}</a></p>`;
-      // a keyboard that pops up on a phone would cover the page: only a mouse-and-keyboard screen gets the cursor
       if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) { box.focus({ preventScroll: true }); box.setSelectionRange(box.value.length, box.value.length); }
     }
     bindLeadForm(form, {
@@ -117,7 +110,6 @@ export const quotePage = {
   },
 };
 
-/* ---------- private leads inbox (owner and editors only) ---------- */
 
 const STATUSES = ['new', 'contacted', 'quoted', 'won', 'lost'];
 const TYPES = [['all', 'All'], ['quote', 'Quotes'], ['training', 'Training'], ['calibration', 'Calibration'], ['support', 'Support']];
@@ -149,7 +141,6 @@ export const leads = {
       sub.textContent = 'Every quote, training, calibration and support request from the site. Only you and editors can see this page.';
       body.innerHTML = `<p class="muted small">Loading leads…</p>`;
       timer = setTimeout(() => { if (!state.loaded) body.innerHTML = `<div class="inbox-empty"><p>The inbox can’t be reached right now. It fills in when the connection comes back.</p></div>`; }, 10000);
-      // one document per visitor (leads/<visitor id>), each holding that visitor's requests by reference number
       unsub = db.collection('leads').orderBy('updatedAt', 'desc').limit(300).onSnapshot(snap => {
         state.loaded = true; clearTimeout(timer);
         state.docs = snap.docs.flatMap(d => {

@@ -1,4 +1,3 @@
-// About and Support. Only what is true and confirmed; everything else is a placeholder the Velocity team fills in.
 import { SITE, STORY } from '../data.js';
 import { esc, rt, icon, sectionHead, revealIn, bindLeadForm, contactFields, contactSummary, scoreLead, num, fitHints } from '../core.js';
 import { catalog } from '../catalog-data.js';

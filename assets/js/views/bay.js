@@ -2,7 +2,6 @@ import { BAY_ITEMS, BAY_GROUPS, PRESETS } from '../data.js';
 import { esc, icon, quote, stepper, toast, loadScenes, webglOK, reducedMotion } from '../core.js';
 import { catalog, photoAttrs, famHref } from '../catalog-data.js';
 
-// v3: the bay holds catalog products now, so a bay saved under the old kit list starts fresh
 const KEY = 'velocity.bay.v3';
 const ZONES = [['overview', 'Overview'], ['dent', 'Dent'], ['masking', 'Prep'], ['carts', 'Trolleys'], ['racks', 'Racks']];
 const ITEM = Object.fromEntries(BAY_ITEMS.map(i => [i.model, i]));
@@ -10,16 +9,14 @@ const ITEM = Object.fromEntries(BAY_ITEMS.map(i => [i.model, i]));
 function clean(sel) {
   const out = {};
   Object.entries(sel || {}).forEach(([id, q]) => { if (ITEM[id] && q > 0) out[id] = Math.min(ITEM[id].max, q | 0); });
-  // a piece that sits on another goes when its base goes
   BAY_ITEMS.forEach(i => { if (i.needs && out[i.model] && !out[i.needs]) delete out[i.model]; });
   return out;
 }
 function load() {
-  try { const o = JSON.parse(localStorage.getItem(KEY) || 'null'); if (o && typeof o === 'object' && o.sel) return { sel: clean(o.sel) }; } catch { /* ignore */ }
+  try { const o = JSON.parse(localStorage.getItem(KEY) || 'null'); if (o && typeof o === 'object' && o.sel) return { sel: clean(o.sel) }; } catch {   }
   return { sel: { ...PRESETS[0].items } };
 }
-function save(st) { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch { /* ignore */ } }
-// a starting point picked on the home page (read once)
+function save(st) { try { localStorage.setItem(KEY, JSON.stringify(st)); } catch {   } }
 function takePreset() {
   try { const id = sessionStorage.getItem('velocity.bay.preset'); sessionStorage.removeItem('velocity.bay.preset'); return PRESETS.find(p => p.id === id) || null; } catch { return null; }
 }
@@ -61,7 +58,7 @@ export const bay = {
 
     const stage = el.querySelector('[data-stage]');
     let ctl = null, gone = false, cat = null;
-    let zone = 'overview';   // the camera the visitor picked: it stays put when the bay changes, unless its zone empties
+    let zone = 'overview';
 
     const units = (id) => (st.sel[id] || 0) * (ITEM[id].qty || 1);
     const paint = ({ animate = true, focusId = null } = {}) => {
@@ -113,7 +110,6 @@ export const bay = {
       el.querySelectorAll('[data-zone]').forEach(b => { const on = b.dataset.zone === z; b.classList.toggle('is-on', on); b.setAttribute('aria-pressed', String(on)); });
       if (ctl) ctl.focus(z);
     };
-    // the groups that hold pieces open, the rest fold away (an empty bay opens the first two to start from)
     const openGroups = () => {
       const any = Object.keys(st.sel).length > 0;
       el.querySelectorAll('[data-group]').forEach((d, gi) => {
@@ -179,9 +175,8 @@ export const bay = {
         if (!mod || gone) return;
         try {
           ctl = mod.createBay(stage, { reducedMotion: reducedMotion() });
-          // arriving from the home page: start from an empty floor and roll the picked bay in
           ctl.setSelection(arriving ? {} : clean(st.sel), { animate: false });
-          if (zone !== 'overview') ctl.focus(zone);   // a view picked while the 3D was still loading
+          if (zone !== 'overview') ctl.focus(zone);
           requestAnimationFrame(() => requestAnimationFrame(() => stage.classList.add('is-live')));
           if (arriving) setTimeout(() => { if (!gone && cat) paint(); }, 600);
           else if (cat) paint({ animate: false });

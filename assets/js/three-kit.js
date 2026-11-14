@@ -1,5 +1,3 @@
-// Velocity 3D kit: shared materials, geometry helpers, canvas textures and the shop lighting rig.
-// Units are meters. +Y is up. Product fronts face +Z.
 import * as THREE from '../vendor/three/build/three.module.min.js';
 import { RoundedBoxGeometry } from '../vendor/three/examples/jsm/geometries/RoundedBoxGeometry.js';
 
@@ -16,7 +14,6 @@ export const PALETTE = {
   primer: '#8b9197',
 };
 
-/* ---------- materials ---------- */
 let M = null;
 export function mats() {
   if (M) return M;
@@ -52,7 +49,6 @@ export function mats() {
   return M;
 }
 
-/* ---------- geometry helpers ---------- */
 const geoCache = new Map();
 function rbGeo(w, h, d, r, seg) {
   const key = `${w.toFixed(4)}|${h.toFixed(4)}|${d.toFixed(4)}|${r.toFixed(4)}|${seg}`;
@@ -67,14 +63,12 @@ export function mesh(geo, mat, shadow = true) {
   return m;
 }
 
-/** Rounded box centered at origin. r = edge radius (clamped). */
 export function box(w, h, d, mat, r = 0.004, seg = 2) {
   const rr = Math.min(r, Math.min(w, h, d) / 2 - 0.0002);
   const g = rr > 0.0006 ? rbGeo(w, h, d, rr, seg) : new THREE.BoxGeometry(w, h, d);
   return mesh(g, mat);
 }
 
-/** Cylinder centered at origin along an axis. */
 export function cyl(r, h, mat, { axis = 'y', seg = 32, r2 = null, open = false } = {}) {
   const g = new THREE.CylinderGeometry(r2 ?? r, r, h, seg, 1, open);
   const m = mesh(g, mat);
@@ -83,7 +77,6 @@ export function cyl(r, h, mat, { axis = 'y', seg = 32, r2 = null, open = false }
   return m;
 }
 
-/** Hollow cylinder (tape roll, bushing). */
 export function ring(ri, ro, h, mat, { axis = 'y', seg = 40 } = {}) {
   const pts = [
     new THREE.Vector2(ri, -h / 2), new THREE.Vector2(ro, -h / 2),
@@ -113,7 +106,6 @@ export function group(...children) {
   return g;
 }
 
-/** A flat decal (plane) facing +Z by default. */
 export function decal(tex, w, h, { transparent = true, emissive = false } = {}) {
   const mat = emissive
     ? new THREE.MeshBasicMaterial({ map: tex, transparent, toneMapped: false })
@@ -123,7 +115,6 @@ export function decal(tex, w, h, { transparent = true, emissive = false } = {}) 
   return m;
 }
 
-/** 4-inch style swivel caster. Returns group; top plate sits at y = h. */
 export function caster(h = 0.11, { brake = false, wheel = 0.05 } = {}) {
   const m = mats();
   const g = new THREE.Group();
@@ -137,19 +128,17 @@ export function caster(h = 0.11, { brake = false, wheel = 0.05 } = {}) {
   return g;
 }
 
-/** Four casters at rectangle corners (half extents). */
 export function casterSet(hx, hz, h = 0.11, opts = {}) {
   const g = new THREE.Group();
   [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sz], i) => {
     const c = caster(h, { brake: i >= 2 && opts.brake !== false, wheel: opts.wheel });
     c.position.set(sx * hx, 0, sz * hz);
-    c.rotation.y = (i * 0.9) % Math.PI; // casters rarely line up
+    c.rotation.y = (i * 0.9) % Math.PI;
     g.add(c);
   });
   return g;
 }
 
-/* ---------- canvas textures ---------- */
 function canvas(w, h) {
   const c = document.createElement('canvas');
   c.width = w; c.height = h;
@@ -163,13 +152,12 @@ function tex(c, { srgb = true, aniso = 8 } = {}) {
   return t;
 }
 function setFont(ctx, weight, size, family = 'Archivo', stretch = 'expanded') {
-  try { ctx.fontStretch = stretch; } catch (e) { /* older engines */ }
+  try { ctx.fontStretch = stretch; } catch (e) {   }
   ctx.font = `${weight} ${size}px ${family}, "Arial Black", Arial, sans-serif`;
 }
 const texCache = new Map();
 function cached(key, fn) { if (!texCache.has(key)) texCache.set(key, fn()); return texCache.get(key); }
 
-/** VELOCITY wordmark with the Lock mark. */
 export function wordmarkTexture(color = '#ffffff', { mark = true, w = 1024, h = 192 } = {}) {
   return cached(`wm-${color}-${mark}-${w}x${h}`, () => {
     const [c, ctx] = canvas(w, h);
@@ -177,7 +165,6 @@ export function wordmarkTexture(color = '#ffffff', { mark = true, w = 1024, h = 
     let x = h * 0.12;
     if (mark) {
       const q = s / 2, y0 = (h - s) / 2;
-      // the Lock: two squares corner to corner, a laser dot where they meet
       ctx.fillStyle = color; ctx.fillRect(x, y0, q, q); ctx.fillRect(x + q, y0 + q, q, q);
       ctx.fillStyle = '#FF3D1F'; ctx.beginPath(); ctx.arc(x + q, y0 + q, s * 0.115, 0, Math.PI * 2); ctx.fill();
       x += s + h * 0.22;
@@ -190,7 +177,6 @@ export function wordmarkTexture(color = '#ffffff', { mark = true, w = 1024, h = 
   });
 }
 
-/** Model badge text, e.g. "CAL-2 PRO" in mono. */
 export function labelTexture(text, { color = '#ffffff', bg = null, w = 512, h = 96, size = 0.5, family = '"IBM Plex Mono", monospace', weight = 600, align = 'left' } = {}) {
   return cached(`lbl-${text}-${color}-${bg}-${w}-${h}-${align}`, () => {
     const [c, ctx] = canvas(w, h);
@@ -203,7 +189,6 @@ export function labelTexture(text, { color = '#ffffff', bg = null, w = 512, h = 
   });
 }
 
-/** OEM-style camera calibration target: checker field with registration marks. */
 export function targetTexture(variant = 0) {
   return cached(`target-${variant}`, () => {
     const W = 1200, H = 760;
@@ -216,17 +201,14 @@ export function targetTexture(variant = 0) {
       const cw = (W - pad * 2) / cols, ch = (H - pad * 2 - 40) / rows;
       for (let i = 0; i < cols; i++) for (let j = 0; j < rows; j++) if ((i + j) % 2 === 0) ctx.fillRect(pad + i * cw, pad + j * ch, cw, ch);
     } else if (variant === 1) {
-      // dot grid target
       const cols = 9, rows = 5;
       for (let i = 0; i < cols; i++) for (let j = 0; j < rows; j++) {
         ctx.beginPath(); ctx.arc(pad + 40 + i * ((W - pad * 2 - 80) / (cols - 1)), pad + 30 + j * ((H - pad * 2 - 100) / (rows - 1)), 34, 0, Math.PI * 2); ctx.fill();
       }
     } else {
-      // concentric squares + center checker
       for (let k = 0; k < 5; k++) { ctx.lineWidth = 26; ctx.strokeStyle = '#0d0d0f'; const inset = 90 + k * 64; ctx.strokeRect(inset, inset * 0.62, W - inset * 2, H - inset * 1.24 - 40); }
       const s = 60; for (let i = 0; i < 4; i++) for (let j = 0; j < 4; j++) if ((i + j) % 2 === 0) ctx.fillRect(W / 2 - 2 * s + i * s, H / 2 - 2 * s - 20 + j * s, s, s);
     }
-    // registration corners
     ctx.lineWidth = 10; ctx.strokeStyle = '#ff3d1f';
     const L = 46, m = 22;
     [[m, m, 1, 1], [W - m, m, -1, 1], [m, H - m, 1, -1], [W - m, H - m, -1, -1]].forEach(([x, y, sx, sy]) => {
@@ -240,7 +222,6 @@ export function targetTexture(variant = 0) {
   });
 }
 
-/** Millimeter scale printed on crossbars and columns. */
 export function rulerTexture(lengthMm = 2300, { vertical = false } = {}) {
   return cached(`ruler-${lengthMm}-${vertical}`, () => {
     const W = 4096, H = 96;
@@ -267,7 +248,6 @@ export function rulerTexture(lengthMm = 2300, { vertical = false } = {}) {
   });
 }
 
-/** Instrument screens. kind: 'stud' | 'pro' | 'al' | 'cal' | 'batt' */
 export function screenTexture(kind = 'stud') {
   return cached(`screen-${kind}`, () => {
     const W = 640, H = 400;
@@ -293,7 +273,7 @@ export function screenTexture(kind = 'stud') {
     } else if (kind === 'batt') {
       ctx.fillText('MAINTAINER  ·  CAL MODE', 24, 29);
       ctx.fillStyle = '#ffffff'; ctx.font = '800 150px Archivo, Arial, sans-serif';
-      try { ctx.fontStretch = 'expanded'; } catch (e) { /* ignore */ }
+      try { ctx.fontStretch = 'expanded'; } catch (e) {   }
       ctx.textBaseline = 'alphabetic';
       ctx.fillText('13.6', 28, 250);
       mono(500, 30); ctx.fillStyle = '#8f99a3';
@@ -306,7 +286,7 @@ export function screenTexture(kind = 'stud') {
       const head = { al: 'PULL-A  ·  CD STUD', pro: 'PULL-S PRO  ·  STUD · AUTO' }[kind] || 'PULL-S  ·  STUD · AUTO';
       ctx.fillText(head, 24, 29);
       ctx.fillStyle = '#ffffff'; ctx.font = '800 150px Archivo, Arial, sans-serif';
-      try { ctx.fontStretch = 'expanded'; } catch (e) { /* ignore */ }
+      try { ctx.fontStretch = 'expanded'; } catch (e) {   }
       ctx.textBaseline = 'alphabetic';
       const al = kind === 'al';
       ctx.fillText(al ? '112' : kind === 'pro' ? '74' : '68', 28, 250);
@@ -321,7 +301,6 @@ export function screenTexture(kind = 'stud') {
   });
 }
 
-/** Repair-order sheet on parts carts. */
 export function roSheetTexture() {
   return cached('ro', () => {
     const W = 512, H = 680;
@@ -338,7 +317,6 @@ export function roSheetTexture() {
   });
 }
 
-/** QR placard that ties a parts cart to its repair order. */
 export function qrPlacardTexture() {
   return cached('qr-placard', () => {
     const W = 440, H = 580;
@@ -347,7 +325,6 @@ export function qrPlacardTexture() {
     ctx.fillStyle = '#ff3d1f'; ctx.fillRect(0, 0, W, 18);
     ctx.fillStyle = '#0d0e10'; ctx.font = '700 46px "IBM Plex Mono", monospace'; ctx.textBaseline = 'top';
     ctx.fillText('RO 24817', 34, 44);
-    // pseudo QR: seeded modules with three finder squares
     const N = 25, size = 330, x0 = (W - size) / 2, y0 = 120, cell = size / N;
     let seed = 24817;
     const rnd = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
@@ -371,7 +348,6 @@ export function qrPlacardTexture() {
   });
 }
 
-/** Box label for parts boxes and consumables. */
 export function boxLabelTexture(title, sub = '') {
   return cached(`box-${title}-${sub}`, () => {
     const W = 512, H = 256;
@@ -387,7 +363,6 @@ export function boxLabelTexture(title, sub = '') {
   });
 }
 
-/** Radial soft shadow used as a contact shadow under products. */
 export function blobTexture() {
   return cached('blob', () => {
     const [c, ctx] = canvas(256, 256);
@@ -398,7 +373,6 @@ export function blobTexture() {
   });
 }
 
-/** Glow strip for laser beams (horizontal gradient). */
 export function glowTexture() {
   return cached('glow', () => {
     const [c, ctx] = canvas(64, 256);
@@ -409,8 +383,6 @@ export function glowTexture() {
   });
 }
 
-/* ---------- lighting rig ---------- */
-/** A dark shop interior with long LED strips overhead and two softboxes, baked to a PMREM env map. */
 export function shopEnvironment(renderer, { strips = 1.0, key = 1.0, fill = 0.35, base = 0.06 } = {}) {
   const scene = new THREE.Scene();
   const geo = new THREE.BoxGeometry(); geo.deleteAttribute('uv');
@@ -418,17 +390,14 @@ export function shopEnvironment(renderer, { strips = 1.0, key = 1.0, fill = 0.35
   room.scale.set(40, 14, 40); room.position.y = 6;
   scene.add(room);
   const light = (intensity, color = 0xffffff) => { const m = new THREE.MeshBasicMaterial({ color }); m.color.multiplyScalar(intensity); return m; };
-  // overhead LED strips, long along X like a modern service bay
   for (let i = -2; i <= 2; i++) {
     const s = new THREE.Mesh(geo, light(9 * strips));
     s.scale.set(16, 0.08, 0.32); s.position.set(0, 12.9, i * 3.2);
     scene.add(s);
   }
-  // key softbox (front-left), fill (right), rim (back)
   const k = new THREE.Mesh(geo, light(14 * key)); k.scale.set(0.1, 6, 7); k.position.set(-19.8, 6, 6); scene.add(k);
   const f = new THREE.Mesh(geo, light(8 * fill)); f.scale.set(0.1, 5, 9); f.position.set(19.8, 5, 2); scene.add(f);
   const r = new THREE.Mesh(geo, light(6 * key, 0xffe2d2)); r.scale.set(10, 4, 0.1); r.position.set(0, 5, -19.8); scene.add(r);
-  // faint floor bounce
   const fl = new THREE.Mesh(geo, light(0.25)); fl.scale.set(30, 0.05, 30); fl.position.y = -0.95; scene.add(fl);
   const pmrem = new THREE.PMREMGenerator(renderer);
   const rt = pmrem.fromScene(scene, 0.035);
@@ -436,8 +405,6 @@ export function shopEnvironment(renderer, { strips = 1.0, key = 1.0, fill = 0.35
   return rt.texture;
 }
 
-/** Fit a perspective camera tightly to an object's silhouette from a given azimuth / elevation (radians).
- *  Projects sampled vertices and iterates so the product is centered and fills the frame. */
 export function frameObject(camera, object, { azimuth = 0.6, elevation = 0.28, padding = 1.12, lookYOffset = 0 } = {}) {
   object.updateMatrixWorld(true);
   const b = new THREE.Box3().setFromObject(object);

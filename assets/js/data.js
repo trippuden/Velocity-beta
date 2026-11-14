@@ -1,14 +1,3 @@
-/* Velocity site content.
-   The product catalog itself is data in assets/data and photo packs in assets/p: brands, 21 departments, and for the
-   Martech catalog 2,391 part numbers on 416 product pages with 1,866 photos. A product page is one product with its
-   versions and accessories, or a range of tools, so the site counts part numbers, never "products". This file holds
-   everything else: contact details, the pages' words, the words about each brand, the bay builder's products and the
-   old links.
-   Rules this content follows (Tripp, Nov 2026): no made-up facts, customers or claims; no response-time or
-   support-speed promises; no prices anywhere on the site; training is something a shop asks for on its quote, never
-   a promise; a brand is named only once Velocity has confirmed it, and never as an "authorized" or "official" dealer.
-   Anything wrapped in ph() is a placeholder that still needs a real answer from the Velocity team: ph() registers it
-   in PH so the preview's "What we need" list stays complete. */
 
 export const PH = new Map();
 export function ph(value, group, label) {
@@ -16,10 +5,8 @@ export function ph(value, group, label) {
   if (!PH.has(key)) PH.set(key, { group, label, value: String(value) });
   return { __ph: true, value: String(value), label };
 }
-// questions for the Velocity team that have no spot on the page yet (they show in the "What we need" list only)
 const ask = (group, label, value = 'To confirm') => { ph(value, group, label); };
 
-/* ---------- company ---------- */
 
 export const SITE = {
   name: 'Velocity',
@@ -50,18 +37,12 @@ export const STORY = {
   origin: ph('Velocity started after SEMA 2026.', 'Photos & story', 'The founding story, in the founder’s words'),
 };
 
-/* ---------- brands: the site's words about each brand in the catalog data ---------- */
 
-// ids match the brand list in assets/data/index.json (velocity-build/catalog/brands.json). Each brand's name is set in
-// the site's own type: no logos, no artwork. line: one line for cards and menus. lede: the top of its page.
-// facts: what the brand prints about itself, with where it says so. Nothing here claims a dealer status.
 export const BRAND_COPY = {
   martech: {
-    // its catalog prints metric units and European voltages: pages that list it carry the shop-power note
     euro: true,
     line: 'Frame benches, welders, spray booths, dust extraction, lifts and hand tools.',
     lede: 'Martech is a body shop equipment company from Albacete, Spain. Its line runs from frame benches, welders and spray booths to dust extraction, lifts and the hand tools around them.',
-    // pages 3 to 5 of the Martech general catalog, in Martech's own figures
     facts: [
       ['In the bodywork market', 'Since 1987'],
       ['Main plant', 'Albacete, Spain: 11,900 m², with the exhibition center, logistics hub, training and customer service on site'],
@@ -76,17 +57,11 @@ export const BRAND_COPY = {
   },
 };
 
-/* ---------- departments: what the catalog index says around the book's data ---------- */
 
-// shown on department tiles and pages next to the counts; ids match assets/data/index.json
 export const DEPT_EXTRA = {};
-// departments to lead the home page tiles with; empty = catalog order, which already runs the way a repair moves
-// through the shop (frame and welding, dent and panel repair, sanding, paint, booths, then the shop around them)
 export const HOME_DEPTS = [];
-// department ids from earlier previews that were split or renamed in the Nov 13 re-sort: links to them still land
 export const DEPT_ALIAS = { 'smart-repair': 'dent-repair', 'electric-tools': 'plastic-repair' };
 
-// calibration is a department on this site with no products yet: the supplier is being chosen
 export const CALIBRATION = {
   id: 'calibration',
   name: 'ADAS calibration equipment',
@@ -95,7 +70,6 @@ export const CALIBRATION = {
   blurb: 'Velocity will sell ADAS calibration equipment. The supplier is being chosen now, so there are no kits listed here yet.',
 };
 
-/* ---------- sourced industry numbers (Calibration page) ---------- */
 
 export const SOURCES = {
   ccc: {
@@ -106,12 +80,11 @@ export const SOURCES = {
   },
 };
 export const STATS = [
-  { value: '23%', label: 'of repairable estimates included a calibration in 2025. In 2017 it was 0.9%.', src: 'ccc' },
-  { value: '+3', unit: 'days', label: 'added to a DRP repair that needs one calibration. More than one adds 5.5 days.', src: 'ccc' },
-  { value: '$500', label: 'is the average calibration bill per repairable vehicle, nearly double five years ago.', src: 'ccc' },
+  { value: '23%', label: 'of repairable appraisals, at least, included a calibration in 2025. In 2017 it was 0.9%.', src: 'ccc' },
+  { value: '+3', unit: 'days', label: 'added, roughly, to a DRP claim that needed one calibration in 2024. More than one added 5.5 days.', src: 'ccc' },
+  { value: '$500', label: 'is about the average calibration bill per repairable vehicle, nearly double five years ago.', src: 'ccc' },
 ];
 
-/* ---------- how buying works (home, catalog, quote) ---------- */
 
 export const STEPS = [
   { t: 'Find it', b: 'Search a part number or a product, or open a department. Every listing carries its part numbers, specs and photos.' },
@@ -120,7 +93,6 @@ export const STEPS = [
   { t: 'Ask about training', b: 'If your techs haven’t run a machine before, tick the training box on the quote and Velocity works it out with your shop.' },
 ];
 
-/* ---------- FAQs ---------- */
 
 export const FAQ = [
   { q: 'Do you repair cars?', a: 'No. Velocity sells equipment, tools and supplies to collision shops, and trains shops on equipment it sells. Your shop does the repairs.' },
@@ -133,7 +105,6 @@ export const FAQ = [
   { q: 'What warranty comes with it?', a: 'It depends on the product. Ask on your quote and the terms come back with the price.' },
 ];
 
-/* ---------- training (the page states only what Velocity has confirmed: it trains on what it sells, when needed) ---------- */
 
 export const TRAINING = {
   examples: [
@@ -146,17 +117,11 @@ export const TRAINING = {
   ],
 };
 
-/* ---------- products the pages pick out (velocity-build/catalog/pack.py packs their photos from these lists) ---------- */
 
-// home: one product from each corner of the catalog, big equipment to small tools
 export const FEATURED = ['F001', 'F009', 'F050', 'F086', 'F023', 'F265', 'F128', 'F368'];
-// calibration: products in the catalog today that sit next to calibration work in a shop (alignment and aim come first)
 export const CAL_NEAR = ['F095', 'F094', 'F030', 'F103'];
 
-/* ---------- Build your bay: catalog products with a 3D model (from the intro film, built from the book's photos) ---------- */
 
-// model: the 3D model id in catalog-models.js; code: the part number it is; qty: units per placed model (a pair of sanders is 2)
-// zone: the camera that frames it; max: how many fit on the bay floor; needs: a model it sits on
 export const BAY_ITEMS = [
   { model: 'mt-spotter', code: 'SP202002', zone: 'dent', max: 1 },
   { model: 'mt-arcpuller', code: 'SP202224', zone: 'dent', max: 1 },
@@ -181,9 +146,7 @@ export const PRESETS = [
   { id: 'full', name: 'Full bay', note: 'Every piece in the builder, on one floor.', items: { 'mt-spotter': 1, 'mt-arcpuller': 1, 'mt-koriolis': 1, 'mt-sanders': 1, 'mt-masking': 1, 'mt-evo7': 3, 'mt-parts': 2, 'mt-bumper': 1, 'mt-panel': 1 } },
 ];
 
-/* ---------- old links ---------- */
 
-// links from earlier previews land on the closest page today. p-f009 opens that product family.
 export const LEGACY = {
   adas: 'calibration', equipment: 'catalog', 'equipment-adas': 'calibration', 'equipment-dent': 'd-dent-repair', 'equipment-prep': 'd-paint',
   'equipment-masking': 'd-paint', 'equipment-carts': 'd-tool-storage', 'equipment-racks': 'd-storage', 'equipment-consumables': 'p-f015',
@@ -197,5 +160,4 @@ export const LEGACY = {
   dealers: 'about', partners: 'about',
 };
 
-/* ---------- the to-confirm groups, in display order ---------- */
 export const PH_GROUPS = ['Contact & company', 'Products & catalog', 'Policies', 'Training', 'Photos & story'];

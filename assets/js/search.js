@@ -1,16 +1,9 @@
-// Catalog search: part numbers, product names, brands and the words a US shop uses for them.
-// The Martech book is written in European shop English (spanner, trolley, bonnet), so a search for "wrench" also
-// finds "spanner" and "cart" finds "trolley". Every word typed has to match somewhere (a synonym counts).
-// A brand's name is a search word too: "martech welder" searches Martech's catalog for welders, and a brand named on
-// its own comes back as that brand, whether its catalog is on the site or still being added. { brand } keeps a
-// search to one brand.
 
 const norm = (s) => String(s || '').toLowerCase()
   .normalize('NFKD').replace(/[̀-ͯ]/g, '')
   .replace(/º/g, '').replace(/[“”"]/g, ' in ').replace(/&/g, ' and ')
   .replace(/[^a-z0-9/.+-]+/g, ' ').replace(/\s+/g, ' ').trim();
 
-// US word -> words the book uses. Keys and values are matched as word starts.
 const SYN = {
   wrench: ['wrench', 'spanner'], wrenches: ['wrench', 'spanner'],
   cart: ['cart', 'trolley'], carts: ['cart', 'trolley'], toolbox: ['trolley', 'tool chest'], rollcab: ['trolley'], 'roll cab': ['trolley'],
@@ -62,7 +55,6 @@ function index(cat) {
   return IDX;
 }
 
-// alternatives for one typed word: itself, plus synonyms
 function alts(tok) {
   const s = SYN[tok];
   return s ? [...new Set([tok, ...s.map(norm)])] : [tok];
@@ -71,7 +63,6 @@ const has = (hay, w) => hay.includes(' ' + w);
 
 export function tokens(q) {
   let t = norm(q);
-  // two-word synonyms first ("paint gun", "vise grip")
   const multi = Object.keys(SYN).filter(k => k.includes(' ') && t.includes(k));
   multi.forEach(k => { t = t.replace(k, k.replace(/ /g, '_')); });
   return t.split(' ').filter(Boolean).map(w => w.replace(/_/g, ' '));
@@ -81,22 +72,18 @@ export function search(cat, q, { famLimit = 60, codeLimit = 80, brand = '' } = {
   const raw = String(q || '').trim();
   if (!raw) return { fams: [], codes: [], brands: [], exact: null, q: raw };
   const { fams, codes, brandKey } = index(cat);
-  // brands named in the search: one typed word is the start of the brand's name ("milw", "martech welder")
   let words = tokens(raw);
   const brands = cat.brands.filter(b => (!brand || b.id === brand) && words.some(w => w.length >= 3 && (brandKey[b.id].startsWith(w) || w.startsWith(brandKey[b.id]))));
-  // a brand's whole name is a filter, not a word to find: the rest of the search runs inside that brand
   const named = cat.brands.find(b => words.includes(brandKey[b.id]));
   if (named) { words = words.filter(w => w !== brandKey[named.id]); if (!brand) brand = named.id; }
   const mine = (bid) => !brand || bid === brand;
   if (!words.length) return { fams: [], codes: [], brands, exact: null, q: raw, brandOnly: true };
-  // a part number typed whole, in any brand's format
   const whole = cat.codeKey.get(raw.toLowerCase().replace(/\s+/g, ''));
   if (whole && mine(cat.fam[cat.codes.get(whole).fid].brand) && !isCodeQuery(raw)) {
     const c = cat.codes.get(whole), key = whole.toLowerCase();
     const more = codes.filter(x => x.c !== c && mine(x.brand) && x.code.startsWith(key)).sort((a, b) => a.code.localeCompare(b.code)).slice(0, codeLimit - 1).map(x => x.c);
     return { fams: [cat.fam[c.fid]], codes: [c, ...more], brands, exact: c, q: raw };
   }
-  // part number: exact, then prefix, then digits anywhere
   if (isCodeQuery(raw)) {
     const digits = raw.replace(/\D/g, '');
     const want = 'sp' + digits;
