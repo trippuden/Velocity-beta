@@ -1,10 +1,12 @@
 /* Velocity site content.
-   The product catalog itself (21 departments, 2,391 part numbers on 416 product pages, 1,866 photos) is data in
-   assets/data and photo packs in assets/p. A product page is one product with its versions and accessories, or a range
-   of tools, so the site counts part numbers, never "products". This file holds everything else: contact details, the
-   pages' words, the bay builder's products and the old links.
+   The product catalog itself is data in assets/data and photo packs in assets/p: brands, 21 departments, and for the
+   Martech catalog 2,391 part numbers on 416 product pages with 1,866 photos. A product page is one product with its
+   versions and accessories, or a range of tools, so the site counts part numbers, never "products". This file holds
+   everything else: contact details, the pages' words, the words about each brand, the bay builder's products and the
+   old links.
    Rules this content follows (Tripp, Nov 2026): no made-up facts, customers or claims; no response-time or
-   support-speed promises; no prices the catalog doesn't have; a price that is still a proposal says so.
+   support-speed promises; no prices anywhere on the site; training is something a shop asks for on its quote, never
+   a promise; a brand is named only once Velocity has confirmed it, and never as an "authorized" or "official" dealer.
    Anything wrapped in ph() is a placeholder that still needs a real answer from the Velocity team: ph() registers it
    in PH so the preview's "What we need" list stays complete. */
 
@@ -30,7 +32,8 @@ export const SITE = {
 };
 
 ask('Contact & company', 'Phone hours, if any should be listed', 'Not shown');
-ask('Products & catalog', 'Which brands and partners Velocity wants named on the site', 'Not named');
+ask('Products & catalog', 'Brands named on the site', 'Martech and Milwaukee. Others wait for your OK');
+ask('Products & catalog', 'Milwaukee: what Velocity carries, and written dealer permission for its photos and descriptions');
 ask('Products & catalog', 'Which catalog products Velocity stocks, and which ship to order');
 ask('Products & catalog', 'US voltage versions of the 230 V and 400 V machines');
 ask('Products & catalog', 'Paint, masking and tape lines: brands and part numbers to add');
@@ -45,6 +48,32 @@ ask('Photos & story', 'Velocity logo pick (logo round 2)');
 export const STORY = {
   founder: ph('[Founder name]', 'Photos & story', 'Founder name, background and photo'),
   origin: ph('Velocity started after SEMA 2026.', 'Photos & story', 'The founding story, in the founder’s words'),
+};
+
+/* ---------- brands: the site's words about each brand in the catalog data ---------- */
+
+// ids match the brand list in assets/data/index.json (velocity-build/catalog/brands.json). Each brand's name is set in
+// the site's own type: no logos, no artwork. line: one line for cards and menus. lede: the top of its page.
+// facts: what the brand prints about itself, with where it says so. Nothing here claims a dealer status.
+export const BRAND_COPY = {
+  martech: {
+    // its catalog prints metric units and European voltages: pages that list it carry the shop-power note
+    euro: true,
+    line: 'Frame benches, welders, spray booths, dust extraction, lifts and hand tools.',
+    lede: 'Martech is a body shop equipment company from Albacete, Spain. Its line runs from frame benches, welders and spray booths to dust extraction, lifts and the hand tools around them.',
+    // pages 3 to 5 of the Martech general catalog, in Martech's own figures
+    facts: [
+      ['In the bodywork market', 'Since 1987'],
+      ['Main plant', 'Albacete, Spain: 11,900 m², with the exhibition center, logistics hub, training and customer service on site'],
+      ['Quality system', 'Certified by AENOR, the Spanish standards and certification body'],
+      ['Its own shops', 'Four body and paint shops, working 5,000 labor hours a month'],
+    ],
+    factsSource: 'From Martech’s general catalog. The figures are Martech’s own.',
+  },
+  milwaukee: {
+    line: 'Ask for Milwaukee on your quote while its catalog is being added.',
+    lede: 'Velocity carries Milwaukee. Its catalog isn’t on the site yet, so there are no part numbers, photos or specs to browse here.',
+  },
 };
 
 /* ---------- departments: what the catalog index says around the book's data ---------- */
@@ -63,7 +92,7 @@ export const CALIBRATION = {
   name: 'ADAS calibration equipment',
   short: 'Calibration',
   status: 'Supplier being chosen',
-  blurb: 'Velocity will sell ADAS calibration equipment and train your techs to use it. The supplier is being chosen now, so there are no kits or prices here yet.',
+  blurb: 'Velocity will sell ADAS calibration equipment. The supplier is being chosen now, so there are no kits listed here yet.',
 };
 
 /* ---------- sourced industry numbers (Calibration page) ---------- */
@@ -88,17 +117,18 @@ export const STEPS = [
   { t: 'Find it', b: 'Search a part number or a product, or open a department. Every listing carries its part numbers, specs and photos.' },
   { t: 'Build your list', b: 'Add what you need to your quote, with quantities. Send your own list too, paint, masking and tape included.' },
   { t: 'Get it priced', b: 'Velocity prices the list in writing and confirms the voltage and version for your shop before you order.' },
-  { t: 'Train on it', b: 'If your techs haven’t run a machine before, Velocity trains them on it. Ask for it on the quote.' },
+  { t: 'Ask about training', b: 'If your techs haven’t run a machine before, tick the training box on the quote and Velocity works it out with your shop.' },
 ];
 
 /* ---------- FAQs ---------- */
 
 export const FAQ = [
-  { q: 'Do you repair cars?', a: 'No. Velocity sells equipment, tools and supplies to collision shops, and trains techs on the equipment when they need it. Your shop does the repairs.' },
+  { q: 'Do you repair cars?', a: 'No. Velocity sells equipment, tools and supplies to collision shops, and trains shops on equipment it sells. Your shop does the repairs.' },
+  { q: 'Which brands do you sell?', a: 'Each brand has its own catalog on the site, split by department. Open Brands in the menu to see which catalogs are listed and which are being added. If you need a brand you don’t see, ask on your quote.' },
   { q: 'Why are there no prices on the site?', a: 'Prices depend on what you order, how many, and where it ships. Add part numbers to your quote and send it, and Velocity sends back a written price.' },
   { q: 'The specs say 230 V or 400 V. Will it run in my shop?', a: 'Specs on this site are shown the way the factory prints them: metric units, and European voltages for most machines. Tell us your shop’s power on the quote so the right version gets quoted.' },
   { q: 'Can I order something that isn’t on the site?', a: 'Ask. Velocity carries paint, masking, tape and shop supplies, and more lines that aren’t listed here yet. Put the items in the notes of your quote, or send your list.' },
-  { q: 'Do you train on the equipment?', a: 'Yes, when your techs need it. Tell us what you’re buying and who needs to learn it, and Velocity sets the training up with you.' },
+  { q: 'Do you train on the equipment?', a: 'Velocity trains shops on equipment it sells. Tick the training box on your quote, tell us what you’re buying and who needs to learn it, and we work it out with your shop.' },
   { q: 'Do you sell calibration equipment?', a: 'It’s coming. Velocity is choosing the supplier now. Leave your details on the Calibration page and we’ll let you know when the lineup is set.' },
   { q: 'What warranty comes with it?', a: 'It depends on the product. Ask on your quote and the terms come back with the price.' },
 ];

@@ -2,7 +2,7 @@
 // sizes and the book's own photos), shared with the intro film. Each model follows its photo: shape, colors,
 // proportions and the parts you see, with no logos. Sizes the book prints are used as printed; the rest are read
 // from the photos and kept in proportion.
-import * as THREE from 'three';
+import * as THREE from '../vendor/three/build/three.module.min.js';
 import { mats, box, cyl, at, group, mesh } from './three-kit.js';
 
 let MM = null;

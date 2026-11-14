@@ -1,9 +1,10 @@
-// Home: the whole line on one page. A live 3D bay of real catalog products, the departments, how buying works,
-// the bay builder, training, calibration (supplier being chosen) and the questions shops ask.
+// Home: the whole line on one page. A live 3D bay of real catalog products, shop by brand, shop by department,
+// how buying works, the bay builder, training (asked for on the quote), calibration (supplier being chosen) and the
+// questions shops ask. Every count on the page is read from the catalog data.
 import { SITE, STEPS, FAQ, TRAINING, CALIBRATION, STATS, PRESETS, BAY_ITEMS, FEATURED } from '../data.js';
-import { esc, rt, icon, cite, revealIn, countUp, loadScenes, webglOK, reducedMotion, sectionHead, num } from '../core.js';
-import { catalog, famHref, deptHref, nCodes } from '../catalog-data.js';
-import { deptTile, calTile, deptOrder, famCard, photo, lockMark } from './catalog.js';
+import { esc, rt, icon, cite, revealIn, countUp, loadScenes, webglOK, reducedMotion, sectionHead, num, fitHints } from '../core.js';
+import { catalog, liveBrands, soonBrands, nameList, nCodes } from '../catalog-data.js';
+import { deptTile, calTile, listTile, deptOrder, famCard, brandGrid, brandsLine } from './catalog.js';
 
 const pad = (n) => String(n).padStart(2, '0');
 const ITEM = Object.fromEntries(BAY_ITEMS.map(i => [i.model, i]));
@@ -31,10 +32,10 @@ function hero(live) {
     <div class="hero__copy">
       <p class="hero__eyebrow"><span>Collision shop equipment</span><span>Shop supplies</span><span>Training</span></p>
       <h1><span class="ln">Equip the whole shop.</span> <span class="ln">One quote.</span></h1>
-      <p class="hero__lede">Welders and dent pullers, frame benches, spray booths, dust extraction, hand tools, lifts, carts and racks, each with its part numbers, specs and photos. Paint, masking and tape go on the same quote. Velocity trains your techs on the equipment when they need it.</p>
+      <p class="hero__lede">Welders and dent pullers, frame benches, spray booths, dust extraction, hand tools, lifts, carts and racks, each with its part numbers, specs and photos. Paint, masking and tape go on the same quote. Need your techs trained on a machine? Ask on the quote.</p>
       <form class="bigsearch bigsearch--hero" data-hero-search role="search">
         <label class="sr" for="hero-q">Search the catalog</label>
-        ${icon('search')}<input id="hero-q" name="q" type="search" autocomplete="off" placeholder="Part number or product" enterkeyhint="search">
+        ${icon('search')}<input id="hero-q" name="q" type="search" autocomplete="off" placeholder="Part number or product" data-hints="Part number or product|Part number|Search" enterkeyhint="search">
         <button type="submit" class="btn btn--signal">Search</button>
       </form>
       <div class="hero__cta">
@@ -42,21 +43,41 @@ function hero(live) {
         <a class="btn btn--ghost btn--lg" href="#bay">Build your bay in 3D</a>
       </div>
     </div>
-    <div class="hero__rail" data-rail>
-      <div class="rail__i"><span class="rail__k">Part numbers listed</span><span class="rail__v" data-rail="codes">2,391</span></div>
-      <div class="rail__i"><span class="rail__k">Departments</span><span class="rail__v" data-rail="depts">21</span></div>
-      <div class="rail__i"><span class="rail__k">More lines</span><span class="rail__v">Being added</span></div>
-      <div class="rail__i"><span class="rail__k">Training</span><span class="rail__v">On the equipment you buy</span></div>
+    <div class="hero__rail" data-rail>${rail(null)}</div>
+  </section>`;
+}
+
+// the strip under the hero: what is on the site, in the catalog's own numbers. Before the catalog has loaded the
+// places hold a dash, so no number is ever shown that the data didn't give.
+function rail(cat) {
+  const live = cat ? liveBrands(cat) : [], soon = cat ? soonBrands(cat) : [];
+  const items = !cat ? [['Catalog', '–'], ['Departments', '–'], ['Brands', '–']]
+    : live.length === 1
+      ? [[`${live[0].name} catalog`, nCodes(live[0].codes)], ['Departments', num(cat.depts.length)], soon.length ? [soon.length === 1 ? soon[0].name : nameList(soon.map(b => b.name)), 'Catalog being added'] : ['More lines', 'Being added']]
+      : [['Part numbers listed', num(cat.counts.codes)], ['Brands on the site', nameList(live.map(b => b.name))], ['Departments', num(cat.depts.length)]];
+  items.push(['Training', 'Ask for it on your quote']);
+  return items.map(([k, v]) => `<div class="rail__i"><span class="rail__k">${esc(k)}</span><span class="rail__v">${esc(v)}</span></div>`).join('');
+}
+
+function brands() {
+  return `
+  <section class="sec sec--tight" id="brands">
+    <div class="wrap">
+      <div class="split-head">
+        ${sectionHead({ idx: '01', kicker: 'Shop by brand', title: 'Every brand, its own catalog.', lede: '<span data-brands-line>Each brand Velocity lists has its own pages, split by department.</span>' })}
+        <a class="link-arrow" href="#brands">All brands ${icon('arrow')}</a>
+      </div>
+      <div data-brands><p class="muted small">Loading the catalog…</p></div>
     </div>
   </section>`;
 }
 
 function depts() {
   return `
-  <section class="sec" id="departments">
+  <section class="sec sec--tight" id="departments">
     <div class="wrap">
       <div class="split-head">
-        ${sectionHead({ idx: '01', kicker: 'The catalog', title: 'From frame benches to rivets.', lede: 'Every product with its part numbers, specs and photos, sorted the way a repair moves through the shop. Open a department, or search a part number from any page.' })}
+        ${sectionHead({ idx: '02', kicker: 'Shop by department', title: 'From frame benches to rivets.', lede: 'Every product with its part numbers, specs and photos, sorted the way a repair moves through the shop. Open a department, or search a part number from any page.' })}
         <a class="link-arrow" href="#catalog">See the whole catalog ${icon('arrow')}</a>
       </div>
       <div class="dgrid" data-depts><p class="muted small">Loading the catalog…</p></div>
@@ -69,7 +90,7 @@ function featured() {
   <section class="sec sec--tight paper rule-top">
     <div class="wrap">
       <div class="split-head">
-        ${sectionHead({ idx: '02', kicker: 'A look inside', title: 'Big equipment. Small parts.', lede: 'A bench that lifts 3,000 kg sits in the same catalog as the studs your dent puller burns through. Each one carries its part number, so the quote you get back matches what you asked for.' })}
+        ${sectionHead({ idx: '03', kicker: 'A look inside', title: 'Big equipment. Small parts.', lede: 'A bench that lifts 3,000 kg sits in the same catalog as the studs your dent puller burns through. Each one carries its part number, so the quote you get back matches what you asked for.' })}
       </div>
       <div class="fgrid fgrid--4" data-featured></div>
     </div>
@@ -80,7 +101,7 @@ function steps() {
   return `
   <section class="sec dark">
     <div class="wrap">
-      ${sectionHead({ idx: '03', kicker: 'How buying works', title: 'Send the list. Get it priced.', lede: 'No account and no cart checkout. Build your list from the catalog, add anything that isn’t in it, and Velocity sends back a written price.' })}
+      ${sectionHead({ idx: '04', kicker: 'How buying works', title: 'Send the list. Get it priced.', lede: 'No account and no cart checkout. Build your list from the catalog, add anything that isn’t in it, and Velocity sends back a written price.' })}
       <ol class="hsteps">${STEPS.map((s, i) => `<li class="hstep" data-reveal data-reveal-d="${i}"><span class="hstep__n">${pad(i + 1)}</span><p class="hstep__t">${esc(s.t)}</p><p class="hstep__b">${esc(s.b)}</p></li>`).join('')}</ol>
       <div class="row-gap"><a class="btn btn--signal" href="#quote">Start a quote ${icon('arrow')}</a><a class="btn btn--ghost" href="#catalog">Open the catalog</a></div>
     </div>
@@ -92,7 +113,7 @@ function bayTeaser() {
   <section class="sec dark-2">
     <div class="wrap bayt">
       <div>
-        ${sectionHead({ idx: '04', kicker: 'Build your bay', title: 'See it on the floor first.', lede: 'Pick a starting point, then add or take away pieces. Every one is a real catalog product with its part number, modeled from its photos. Move the camera around it, then send the whole bay as one quote.' })}
+        ${sectionHead({ idx: '05', kicker: 'Build your bay', title: 'See it on the floor first.', lede: 'Pick a starting point, then add or take away pieces. Every one is a real catalog product with its part number, modeled from its photos. Move the camera around it, then send the whole bay as one quote.' })}
         <div class="bayt__starts">${PRESETS.map((p, i) => {
           const pieces = Object.values(p.items).reduce((s, q) => s + q, 0);
           return `<a class="bayt__start" href="#bay" data-bay-preset="${p.id}" data-bayt="${i}">
@@ -116,7 +137,7 @@ function trainingBand() {
   <section class="sec">
     <div class="wrap trainb trainb--light">
       <div>
-        ${sectionHead({ idx: '05', kicker: 'Training', title: 'We train your techs on it.', lede: 'If your techs haven’t run a machine before, Velocity trains them on it. Tell us what you’re buying and who needs to learn it, and we set it up with you. Skip it if your techs already know the equipment.' })}
+        ${sectionHead({ idx: '06', kicker: 'Training', title: 'Need your techs trained?', lede: 'If your techs haven’t run a machine before, tick the training box on your quote. Tell us what you’re buying and who needs to learn it, and Velocity works it out with your shop. Skip it if your techs already know the equipment.' })}
         <a class="btn btn--ink" href="#training">How training works ${icon('arrow')}</a>
       </div>
       <ul class="tlist">${TRAINING.examples.map(([d, t], i) => `<li><a href="#d-${esc(d)}"><span class="tlist__n">${pad(i + 1)}</span><span class="tlist__t">${esc(t)}</span>${icon('arrow')}</a></li>`).join('')}</ul>
@@ -130,7 +151,7 @@ function calBand() {
     <div class="wrap">
       <div class="calband__head">
         <div>
-          <p class="kicker"><span class="kicker__idx">06</span>Calibration</p>
+          <p class="kicker"><span class="kicker__idx">07</span>Calibration</p>
           <h2 class="h2">ADAS calibration equipment is coming.</h2>
         </div>
         <div>
@@ -152,7 +173,7 @@ function faq() {
   return `
   <section class="sec">
     <div class="wrap two-col">
-      <div class="sticky-col">${sectionHead({ idx: '07', kicker: 'Questions', title: 'What shops ask us.' })}</div>
+      <div class="sticky-col">${sectionHead({ idx: '08', kicker: 'Questions', title: 'What shops ask us.' })}</div>
       <div class="faq">${FAQ.map(f => `<details><summary>${esc(f.q)}${icon('plus')}</summary><div class="faq__a"><p>${esc(f.a)}</p></div></details>`).join('')}</div>
     </div>
   </section>`;
@@ -176,9 +197,9 @@ export const home = {
   id: 'home', nav: 'home', title: '',
   render(el) {
     const live = webglOK() && !reducedMotion();
-    el.innerHTML = hero(live) + depts() + featured() + steps() + bayTeaser() + trainingBand() + calBand() + faq() + final();
+    el.innerHTML = hero(live) + brands() + depts() + featured() + steps() + bayTeaser() + trainingBand() + calBand() + faq() + final();
     let gone = false, ctl = null, timer = 0;
-    const offs = [revealIn(el), countUp(el)];
+    const offs = [revealIn(el), countUp(el), fitHints(el)];
 
     el.querySelector('[data-hero-search]').addEventListener('submit', e => {
       e.preventDefault();
@@ -190,17 +211,21 @@ export const home = {
     catalog().then(c => {
       if (gone) return;
       cat = c;
-      el.querySelector('[data-rail="depts"]').textContent = num(c.counts.depts);
-      el.querySelector('[data-rail="codes"]').textContent = num(c.counts.codes);
+      el.querySelector('[data-rail]').innerHTML = rail(c);
+      el.querySelector('[data-brands]').innerHTML = brandGrid(c);
+      el.querySelector('[data-brands-line]').textContent = `Each brand has its own pages, split by department. ${brandsLine(c)}`;
       const grid = el.querySelector('[data-depts]');
-      grid.innerHTML = deptOrder(c).map(d => deptTile(d)).join('') + calTile() + `<a class="dtile dtile--list" href="#quote"><span class="dtile__body"><span class="dtile__n">Not listed here yet</span><span class="dtile__name">Paint, masking, tape and more lines ${icon('arrow')}</span><span class="dtile__subs">Velocity carries shop supplies and more lines that aren’t on the site yet. Put them in the notes of your quote, or send your own list.</span></span></a>`;
-      grid.querySelectorAll('.dtile').forEach((t, i) => { t.setAttribute('data-reveal', ''); t.style.transitionDelay = `${(i % 4) * 50}ms`; });
-      el.querySelector('[data-featured]').innerHTML = FEATURED.map(id => c.fam[id]).filter(Boolean).map(f => famCard(f, { pack: 'set/featured' })).join('');
+      grid.innerHTML = deptOrder(c).map(d => deptTile(d)).join('') + calTile() + listTile();
+      el.querySelectorAll('.dtile, .bcard').forEach((t, i) => { t.setAttribute('data-reveal', ''); t.style.transitionDelay = `${(i % 4) * 50}ms`; });
+      // a card names its brand only when the row mixes brands
+      const picks = FEATURED.map(id => c.fam[id]).filter(Boolean), mixed = new Set(picks.map(f => f.brand)).size > 1;
+      el.querySelector('[data-featured]').innerHTML = picks.map(f => famCard(f, { pack: 'set/featured', brand: mixed ? c.brand[f.brand] : null })).join('');
       el.querySelectorAll('[data-code-label]').forEach(i => { const x = c.codes.get(i.dataset.codeLabel); i.textContent = x ? x.label : ''; });
       offs.push(revealIn(el));
     }).catch(() => {
       if (gone) return;
       el.querySelector('[data-depts]').innerHTML = '<p class="muted">The catalog didn’t load. Reload the page to try again.</p>';
+      el.querySelector('[data-brands]').innerHTML = '';
     });
 
     // the live bay: real catalog products roll in, one starting point after another

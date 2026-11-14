@@ -1,7 +1,10 @@
 // The product catalog (assets/data, made by velocity-build/catalog/build.py).
-// index.json holds every department, product family and part number; a department's detail file is loaded the
-// first time one of its product pages opens. Nothing here has a price: the book prints none.
-import { DEPT_EXTRA } from './data.js';
+// index.json holds every brand, department, product family and part number; a department's detail file is loaded
+// the first time one of its product pages opens. Nothing here has a price.
+// Brands: every family carries a brand id. A brand with families is live and has its own catalog pages
+// (#b-martech, #b-martech-d-welding); a brand without any is named on the site as "catalog being added" and lists
+// nothing. A new brand needs no code here: its families arrive in the data with its id.
+import { DEPT_EXTRA, BRAND_COPY } from './data.js';
 
 const BASE = 'assets/data/';
 let indexP = null;
@@ -10,8 +13,13 @@ let CAT = null;
 
 // page addresses are plain names (letters, digits, hyphens) so a link to a product or department survives being
 // shared from the preview: #d-welding, #p-f009-digital-mini-spotter, #p-f009-digital-mini-spotter-SP202018
-export const famHref = (f, code = '') => `#p-${f.id.toLowerCase()}-${f.slug}${code ? `-${code}` : ''}`;
+// a part number the way it goes in an address or an element id, whatever a brand's numbers look like (48-22-9000)
+export const codeSlug = (code) => String(code).replace(/[^A-Za-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+export const famHref = (f, code = '') => `#p-${f.id.toLowerCase()}-${f.slug}${code ? `-${codeSlug(code)}` : ''}`;
 export const deptHref = (d) => `#d-${d.id}`;
+export const brandHref = (b) => `#b-${b.id}`;
+// one brand's part of a department: #b-martech-d-welding
+export const brandDeptHref = (b, d) => `#b-${b.id}-d-${d.id}`;
 
 const getJSON = (url) => fetch(url).then(r => { if (!r.ok) throw new Error(`${url}: ${r.status}`); return r.json(); });
 
@@ -67,22 +75,51 @@ export function catalog() {
 export const loaded = () => CAT;
 
 function build(raw) {
-  const fams = raw.fams.map(([id, slug, name, dept, sub, photo, w, h, n, code, short, np, dup = '']) => ({ id, slug, name, dept, sub, photo, w, h, n, code, short, np, dup, all: 0 }));
+  // brands in display order, with the site's words about each one (data.js)
+  const brands = (raw.brands && raw.brands.length ? raw.brands : [{ id: 'martech', name: 'Martech' }])
+    .map(b => ({ ...b, ...(BRAND_COPY[b.id] || {}), fams: [], codes: 0, depts: [], live: false }));
+  const brand = Object.fromEntries(brands.map(b => [b.id, b]));
+  const brandOf = (id) => {
+    if (id && !brand[id]) { const b = { id, name: id[0].toUpperCase() + id.slice(1), fams: [], codes: 0, depts: [], live: false }; brands.push(b); brand[id] = b; }
+    return id || brands[0].id;
+  };
+  const fams = raw.fams.map(([id, slug, name, dept, sub, photo, w, h, n, code, short, np, dup = '', bid = '']) => ({ id, slug, name, dept, sub, photo, w, h, n, code, short, np, dup, brand: brandOf(bid), all: 0 }));
   const fam = Object.fromEntries(fams.map(f => [f.id, f]));
-  const codes = new Map();
+  const codes = new Map(), codeKey = new Map();
   raw.codes.forEach(([code, label, fid, role, photo]) => {
     const c = { code, label, fid, role, photo };
     codes.set(code, c);
+    codeKey.set(code.toLowerCase(), code);
+    const slug = codeSlug(code).toLowerCase();
+    if (!codeKey.has(slug)) codeKey.set(slug, code);
     fam[fid].all++;
   });
+  const order = Object.fromEntries(brands.map((b, i) => [b.id, i]));
   const depts = raw.depts.map(d => {
     const ids = d.subs.flatMap(([, list]) => list);
-    return { ...d, ...(DEPT_EXTRA[d.id] || {}), fams: ids, codes: ids.reduce((s, id) => s + fam[id].all, 0) };
+    // by: the department's groups, families and part numbers for each brand that has products in it
+    const by = {};
+    d.subs.forEach(([s, list]) => list.forEach(id => {
+      const b = fam[id].brand;
+      const x = by[b] || (by[b] = { subs: [], fams: [], codes: 0 });
+      let g = x.subs.find(y => y[0] === s);
+      if (!g) x.subs.push(g = [s, []]);
+      g[1].push(id); x.fams.push(id); x.codes += fam[id].all;
+    }));
+    return { ...d, ...(DEPT_EXTRA[d.id] || {}), fams: ids, codes: ids.reduce((s, id) => s + fam[id].all, 0), by, brands: Object.keys(by).sort((a, b) => order[a] - order[b]) };
   });
   const dept = Object.fromEntries(depts.map(d => [d.id, d]));
   // which department pack holds each family's card photo, and the department's own photo
   depts.forEach(d => { d.hp = `d/${d.id}.0`; d.fams.forEach((id, i) => { fam[id].lp = `d/${d.id}.${Math.floor(i / LIST_CHUNK)}`; }); });
-  CAT = { depts, dept, fams, fam, codes, counts: raw.counts };
+  brands.forEach(b => {
+    b.depts = depts.filter(d => d.by[b.id]);
+    b.fams = b.depts.flatMap(d => d.by[b.id].fams);
+    b.codes = b.fams.reduce((s, id) => s + fam[id].all, 0);
+    b.live = b.fams.length > 0;
+    // a brand whose products come without photos lists them as rows of part numbers, not photo cards
+    b.rows = b.live && b.fams.every(id => !fam[id].photo);
+  });
+  CAT = { brands, brand, depts, dept, fams, fam, codes, codeKey, counts: raw.counts };
   return CAT;
 }
 
@@ -95,15 +132,29 @@ export function detail(fid) {
   });
 }
 
+// the part number a product address ends with, if it ends with one: "digital-mini-spotter-SP202018" gives SP202018.
+// The longest ending that is a part number wins, so numbers with hyphens of their own are found whole.
+export function codeInTail(cat, tail) {
+  const parts = String(tail || '').toLowerCase().split('-').filter(Boolean);
+  for (let i = 0; i < parts.length; i++) { const c = cat.codeKey.get(parts.slice(i).join('-')); if (c) return c; }
+  return '';
+}
+
 // a quote line id is a part number (SP202020) or, for a product the book prints no number for, its family id (F058)
 export function resolveItem(cat, id) {
   if (!cat) return null;
   const c = cat.codes.get(id);
-  if (c) { const f = cat.fam[c.fid]; return { id, code: c.code, label: c.label || f.name, fam: f, photo: c.photo || f.photo }; }
+  if (c) { const f = cat.fam[c.fid]; return { id, code: c.code, label: c.label || f.name, fam: f, brand: cat.brand[f.brand], photo: c.photo || f.photo }; }
   const f = cat.fam[id];
-  if (f) return { id, code: '', label: f.name, fam: f, photo: f.photo };
+  if (f) return { id, code: '', label: f.name, fam: f, brand: cat.brand[f.brand], photo: f.photo };
   return null;
 }
+
+// the brands whose catalog is on the site, and the ones named as "being added"
+export const liveBrands = (cat) => cat.brands.filter(b => b.live);
+export const soonBrands = (cat) => cat.brands.filter(b => !b.live);
+// "Martech" / "Martech and Milwaukee" / "Martech, Milwaukee and Acme"
+export const nameList = (names) => (names.length < 3 ? names.join(' and ') : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`);
 
 // "1 part number" / "11 part numbers"
 export const nCodes = (n) => `${n.toLocaleString('en-US')} part number${n === 1 ? '' : 's'}`;

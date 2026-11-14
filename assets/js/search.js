@@ -1,6 +1,9 @@
-// Catalog search: part numbers, product names and the words a US shop uses for them.
-// The book is written in European shop English (spanner, trolley, bonnet), so a search for "wrench" also finds
-// "spanner" and "cart" finds "trolley". Every word typed has to match somewhere (a synonym counts).
+// Catalog search: part numbers, product names, brands and the words a US shop uses for them.
+// The Martech book is written in European shop English (spanner, trolley, bonnet), so a search for "wrench" also
+// finds "spanner" and "cart" finds "trolley". Every word typed has to match somewhere (a synonym counts).
+// A brand's name is a search word too: "martech welder" searches Martech's catalog for welders, and a brand named on
+// its own comes back as that brand, whether its catalog is on the site or still being added. { brand } keeps a
+// search to one brand.
 
 const norm = (s) => String(s || '').toLowerCase()
   .normalize('NFKD').replace(/[̀-ͯ]/g, '')
@@ -50,11 +53,12 @@ function index(cat) {
   const deptName = Object.fromEntries(cat.depts.map(d => [d.id, norm(d.name + ' ' + d.short)]));
   const famLabels = new Map();
   cat.codes.forEach(c => { if (c.role === 0) famLabels.set(c.fid, (famLabels.get(c.fid) || '') + ' ' + norm(c.label)); });
+  const brandKey = Object.fromEntries(cat.brands.map(b => [b.id, norm(b.name)]));
   const fams = cat.fams.filter(f => !f.dup).map(f => ({
     f, name: ' ' + norm(f.name), sub: ' ' + norm(f.sub) + ' ' + deptName[f.dept], short: ' ' + norm(f.short), labels: ' ' + (famLabels.get(f.id) || ''),
   }));
-  const codes = [...cat.codes.values()].map(c => ({ c, code: c.code.toLowerCase(), label: ' ' + norm(c.label), fam: ' ' + norm(cat.fam[c.fid].name) }));
-  IDX = { cat, fams, codes };
+  const codes = [...cat.codes.values()].map(c => ({ c, brand: cat.fam[c.fid].brand, code: c.code.toLowerCase(), label: ' ' + norm(c.label), fam: ' ' + norm(cat.fam[c.fid].name) }));
+  IDX = { cat, fams, codes, brandKey };
   return IDX;
 }
 
@@ -73,25 +77,40 @@ export function tokens(q) {
   return t.split(' ').filter(Boolean).map(w => w.replace(/_/g, ' '));
 }
 
-export function search(cat, q, { famLimit = 60, codeLimit = 80 } = {}) {
+export function search(cat, q, { famLimit = 60, codeLimit = 80, brand = '' } = {}) {
   const raw = String(q || '').trim();
-  if (!raw) return { fams: [], codes: [], exact: null, q: raw };
-  const { fams, codes } = index(cat);
+  if (!raw) return { fams: [], codes: [], brands: [], exact: null, q: raw };
+  const { fams, codes, brandKey } = index(cat);
+  // brands named in the search: one typed word is the start of the brand's name ("milw", "martech welder")
+  let words = tokens(raw);
+  const brands = cat.brands.filter(b => (!brand || b.id === brand) && words.some(w => w.length >= 3 && (brandKey[b.id].startsWith(w) || w.startsWith(brandKey[b.id]))));
+  // a brand's whole name is a filter, not a word to find: the rest of the search runs inside that brand
+  const named = cat.brands.find(b => words.includes(brandKey[b.id]));
+  if (named) { words = words.filter(w => w !== brandKey[named.id]); if (!brand) brand = named.id; }
+  const mine = (bid) => !brand || bid === brand;
+  if (!words.length) return { fams: [], codes: [], brands, exact: null, q: raw, brandOnly: true };
+  // a part number typed whole, in any brand's format
+  const whole = cat.codeKey.get(raw.toLowerCase().replace(/\s+/g, ''));
+  if (whole && mine(cat.fam[cat.codes.get(whole).fid].brand) && !isCodeQuery(raw)) {
+    const c = cat.codes.get(whole), key = whole.toLowerCase();
+    const more = codes.filter(x => x.c !== c && mine(x.brand) && x.code.startsWith(key)).sort((a, b) => a.code.localeCompare(b.code)).slice(0, codeLimit - 1).map(x => x.c);
+    return { fams: [cat.fam[c.fid]], codes: [c, ...more], brands, exact: c, q: raw };
+  }
   // part number: exact, then prefix, then digits anywhere
   if (isCodeQuery(raw)) {
     const digits = raw.replace(/\D/g, '');
     const want = 'sp' + digits;
-    const hit = codes.filter(x => x.code.startsWith(want) || x.code.includes(digits))
+    const hit = codes.filter(x => mine(x.brand) && (x.code.startsWith(want) || x.code.includes(digits)))
       .sort((a, b) => (b.code === want) - (a.code === want) || (b.code.startsWith(want)) - (a.code.startsWith(want)) || a.code.localeCompare(b.code))
       .slice(0, codeLimit).map(x => x.c);
     const exact = hit.find(c => c.code.toLowerCase() === want) || null;
     const famIds = [...new Set(hit.map(c => c.fid))];
-    return { fams: famIds.slice(0, famLimit).map(id => cat.fam[id]), codes: hit, exact, q: raw };
+    return { fams: famIds.slice(0, famLimit).map(id => cat.fam[id]), codes: hit, brands, exact, q: raw };
   }
-  const toks = tokens(raw);
-  const groups = toks.map(alts);
+  const groups = words.map(alts);
   const famScored = [];
   for (const x of fams) {
+    if (!mine(x.f.brand)) continue;
     let score = 0, ok = true;
     for (const g of groups) {
       let best = 0;
@@ -110,6 +129,7 @@ export function search(cat, q, { famLimit = 60, codeLimit = 80 } = {}) {
   famScored.sort((a, b) => b[0] - a[0] || a[1].name.localeCompare(b[1].name));
   const codeScored = [];
   for (const x of codes) {
+    if (!mine(x.brand)) continue;
     let score = 0, ok = true;
     for (const g of groups) {
       let best = 0;
@@ -125,5 +145,5 @@ export function search(cat, q, { famLimit = 60, codeLimit = 80 } = {}) {
     if (ok) codeScored.push([score - x.c.role * 0.5, x.c]);
   }
   codeScored.sort((a, b) => b[0] - a[0] || a[1].code.localeCompare(b[1].code));
-  return { fams: famScored.slice(0, famLimit).map(s => s[1]), codes: codeScored.slice(0, codeLimit).map(s => s[1]), exact: null, q: raw, totalFams: famScored.length, totalCodes: codeScored.length };
+  return { fams: famScored.slice(0, famLimit).map(s => s[1]), codes: codeScored.slice(0, codeLimit).map(s => s[1]), brands, exact: null, q: raw, totalFams: famScored.length, totalCodes: codeScored.length };
 }

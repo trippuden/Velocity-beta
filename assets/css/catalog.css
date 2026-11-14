@@ -446,6 +446,117 @@ a.clist__fam:hover { color: var(--ink); }
 .bay__sum .sumrow--total b { font-size: 30px; }
 .bay__no3d { position: absolute; left: 24px; right: 24px; top: 50%; transform: translateY(-50%); z-index: 2; max-width: 420px; margin: 0 auto; padding: 16px 18px; border: 1px dashed var(--line-d2); background: rgba(8, 9, 11, .7); font: 500 12px/1.6 var(--mono); letter-spacing: .06em; text-transform: uppercase; color: var(--mute-d); text-align: center; }
 
+/* ---------- brands ---------- */
+
+/* a brand card: the brand's name in the site's own type, over photos of its own products. No logos. */
+.bgrid { display: grid; grid-template-columns: repeat(var(--n, 2), minmax(0, 1fr)); gap: 1px; padding: 1px; }
+.bgrid--1 { --n: 1; } .bgrid--2 { --n: 2; } .bgrid--3 { --n: 3; }
+.bgrid > * { outline: 1px solid var(--line); }
+.bcard { position: relative; display: grid; grid-template-rows: auto 1fr; min-width: 0; background: var(--paper); transition: background .25s; isolation: isolate; }
+.bcard:hover { background: #fff; }
+.bcard:focus-visible { outline: 2px solid var(--signal); outline-offset: -2px; z-index: 2; }
+.bcard__imgs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1px; background: var(--line); border-bottom: 1px solid var(--line); }
+.bcard__img { display: grid; grid-template: minmax(0, 1fr) / minmax(0, 1fr); place-items: center; aspect-ratio: 4 / 3; min-height: 0; overflow: hidden; background: #F6F6F3; }
+.bcard__img img { width: 100%; height: 100%; object-fit: contain; padding: 9% 10% 5%; mix-blend-mode: multiply; transition: transform .6s var(--ease); }
+.bcard:hover .bcard__img img { transform: translateY(-4px) scale(1.03); }
+.bcard__body { display: grid; gap: 10px; align-content: start; padding: 22px 24px 26px; }
+.bcard__k { font: 500 11.5px/1.3 var(--mono); color: var(--mute); letter-spacing: .02em; }
+.bcard__k--status { display: inline-flex; align-items: center; gap: 8px; color: var(--signal); }
+.bcard__k--status i { width: 7px; height: 7px; border-radius: 50%; background: var(--signal); box-shadow: 0 0 8px rgba(255, 61, 31, .8); animation: blink 1.4s steps(2) infinite; }
+.bcard__name { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; font: 800 clamp(40px, 4.4vw, 68px)/.92 var(--display); font-stretch: 75%; letter-spacing: -.008em; word-spacing: .05em; }
+.bcard__name .ic { flex: none; width: 24px; height: 24px; margin-top: 8px; color: var(--signal-text); transition: transform .3s var(--ease); }
+.bcard:hover .bcard__name .ic { transform: translateX(5px); }
+.bcard__line { font-size: 15px; line-height: 1.45; color: var(--ink-2); max-width: 52ch; }
+.bcard--bare { grid-template-rows: 1fr; }
+.bcard--bare .bcard__body, .bcard--soon .bcard__body { align-content: end; min-height: 100%; padding-top: 40px; }
+.bcard--soon { grid-template-rows: 1fr; background: var(--night); color: #fff; }
+.bcard--soon:hover { background: var(--night-2); }
+.bcard--soon .bcard__name .ic { color: var(--signal); }
+.bcard--soon .bcard__line { color: #b9bdc4; }
+
+.counts--1 { grid-template-columns: minmax(0, 1fr); }
+.counts--2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.counts__src { margin-top: 12px; font: 500 12px/1.45 var(--mono); letter-spacing: .02em; color: var(--mute); }
+.catsec--first { padding-top: clamp(20px, 2.4vw, 32px); }
+
+/* a brand's own page */
+.bhead__k { margin-top: 18px; font: 700 11px/1.3 var(--wide); font-stretch: 125%; letter-spacing: .14em; text-transform: uppercase; color: var(--signal-text); }
+.phead .bhead__k + .h1 { margin-top: 10px; }
+.bhead--soon .h1 { margin-top: 18px; }
+.facts__src { margin-top: 14px; font: 500 12px/1.5 var(--mono); letter-spacing: .02em; color: var(--mute); }
+.bay-callout--light { background: var(--paper); color: var(--ink); border: 1px solid var(--line); }
+.bay-callout--light p { color: var(--ink-2); }
+
+/* the brand named on a card or a row, only in lists that mix brands */
+.fcard__brand { font: 700 10.5px/1 var(--wide); font-stretch: 125%; letter-spacing: .14em; text-transform: uppercase; color: var(--mute); }
+/* a brand whose catalog comes without photos is listed as rows of part numbers */
+.clist--rows .clist__i { grid-template-columns: minmax(0, 1fr) auto; min-height: 60px; }
+.clist--rows .clist__n { font-size: 15.5px; font-weight: 650; }
+.dtile--bare { grid-template-rows: 1fr; }
+/* the tile that closes a brand's department grid: it takes the cells left in the last row, at each column count */
+.dgrid > .dtile--fill { grid-column: span var(--f4, 1); }
+.dgrid > .dtile--fill[data-f4="0"] { display: none; }
+.dtile--bare .dtile__body { align-content: end; min-height: 100%; padding-top: 28px; }
+
+/* department page: whose products these are */
+.dhead__grid--bare { grid-template-columns: minmax(0, 1fr); }
+.dhead__brand { margin-top: 18px; font: 700 11px/1.3 var(--wide); font-stretch: 125%; letter-spacing: .14em; text-transform: uppercase; }
+.dhead__brand a { color: var(--signal-text); }
+.dhead__brand a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.phead .dhead__brand + .h1 { margin-top: 10px; }
+.dhead__by { margin-top: 14px; font-size: 14.5px; color: var(--ink-2); }
+.dhead__by a:not(.link-arrow) { text-decoration: underline; text-decoration-color: var(--signal); text-underline-offset: 3px; }
+.dhead__brands, .sres__scope { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin-top: 16px; }
+.dhead__brands .chips, .sres__scope .chips { flex: 0 1 auto; flex-wrap: wrap; overflow: visible; }
+.sres__scope[hidden] { display: none; }
+.dhead__k, .sres__k { font: 700 10.5px/1 var(--wide); font-stretch: 125%; letter-spacing: .14em; text-transform: uppercase; color: var(--mute); }
+button.chip { cursor: pointer; }
+
+/* search results: a note under a list keeps clear of it */
+.sres__sec + .sres__none { margin-top: clamp(28px, 3.4vw, 44px); }
+
+/* quote: the brand beside each part number, and the line a link started under "Not in the catalog?" */
+.qline__b { margin-left: 10px; padding-left: 10px; border-left: 1px solid var(--line); color: var(--mute); }
+.note.qhint { margin: 0 0 16px; flex-wrap: wrap; align-items: center; max-width: none; }
+.qhint > span { flex: 1 1 260px; }
+.qhint .link-arrow { flex: none; }
+
+/* header search: a brand in the drop-down */
+.hs__i--brand { grid-template-columns: minmax(0, 1fr) auto; min-height: 50px; }
+.hs__i--brand .hs__n { font-size: 15px; font-weight: 700; }
+.hs__i--brand .ic { width: 16px; height: 16px; color: var(--signal-text); }
+
+/* catalog menu: brands above the departments */
+.mbrands { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 26px; }
+.mbrand { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 20px; align-items: center; min-width: 230px; padding: 12px 14px 13px 16px; border: 1px solid var(--line-d); color: #fff; transition: border-color .2s, background .2s; }
+.mbrand:hover { border-color: var(--signal); background: rgba(255, 61, 31, .06); }
+.mbrand__n { font: 800 26px/1 var(--display); font-stretch: 75%; letter-spacing: -.004em; word-spacing: .05em; }
+.mbrand__c { grid-column: 1; font: 500 11px/1.2 var(--mono); letter-spacing: .02em; color: var(--mute-d); }
+.mbrand--soon .mbrand__c { color: var(--signal); }
+.mbrand .ic { grid-column: 2; grid-row: 1 / span 2; width: 18px; height: 18px; color: var(--signal); transition: transform .25s var(--ease); }
+.mbrand:hover .ic { transform: translateX(3px); }
+.mbrand--all { min-width: 0; align-content: center; }
+.mbrand--all .mbrand__n { font: 600 14px/1.2 var(--font); font-stretch: 100%; letter-spacing: 0; word-spacing: 0; color: #c3c7cd; }
+.mbrand--all .ic { grid-row: 1; }
+
+/* phone menu: brands first, departments fold away, every row a full-size tap target */
+.mnav__grp { display: grid; padding: 4px 0 8px; border-bottom: 1px solid var(--line-d); }
+.mnav__grp[hidden], .mnav__fold[hidden] { display: none; }
+.mnav__h { padding: 14px 0 4px; font: 700 10.5px/1 var(--wide); font-stretch: 125%; letter-spacing: .14em; text-transform: uppercase; color: var(--mute-d); }
+.mnav__in .mnav__sub { display: flex; align-items: center; justify-content: space-between; gap: 14px; min-height: 48px; padding: 6px 0; border: 0; font: 600 17px/1.25 var(--font); color: #fff; }
+.mnav__c { flex: none; font: 500 11.5px/1.2 var(--mono); letter-spacing: .02em; color: var(--mute-d); text-align: right; }
+.mnav__fold { border-bottom: 1px solid var(--line-d); }
+.mnav__fold > summary { display: flex; align-items: center; gap: 10px; min-height: 54px; padding: 6px 0; font: 650 20px/1.2 var(--font); font-stretch: 100%; color: #fff; cursor: pointer; list-style: none; }
+.mnav__fold > summary::-webkit-details-marker { display: none; }
+.mnav__fold > summary .ic { margin-left: auto; width: 20px; height: 20px; color: var(--signal); transition: transform .25s var(--ease); }
+.mnav__fold[open] > summary .ic { transform: rotate(180deg); }
+.mnav__n { font: 500 12px/1 var(--mono); color: var(--signal); }
+.mnav__depts { display: grid; margin: 0 0 14px 2px; padding-left: 14px; border-left: 1px solid var(--line-d); }
+.mnav__depts .mnav__sub { min-height: 46px; font: 500 16px/1.25 var(--font); color: #d6d9de; }
+
+/* footer: brands, departments, Velocity, your quote */
+.ftr__cols { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+
 /* ---------- responsive ---------- */
 
 @media (max-width: 1360px) {
@@ -466,6 +577,11 @@ a.clist__fam:hover { color: var(--ink); }
 }
 @media (max-width: 1120px) {
   .dgrid, .fgrid, .fgrid--4 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .bgrid--3 { --n: 2; }
+  .dgrid > .dtile--fill { grid-column: span var(--f3, 1); }
+  .dgrid > .dtile--fill[data-f4="0"] { display: grid; }
+  .dgrid > .dtile--fill[data-f3="0"] { display: none; }
+  .ftr__cols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .hsteps { grid-template-columns: 1fr 1fr; }
   .hstep:nth-child(3) { padding-left: 0; border-left: 0; }
   .hstep:nth-child(n + 3) { border-top: 1px solid var(--line-d); }
@@ -500,6 +616,16 @@ a.clist__fam:hover { color: var(--ink); }
 }
 @media (max-width: 720px) {
   /* the header row on a phone: wordmark, search, quote, menu. The preview pill moves into the menu. */
+  .bgrid, .bgrid--2, .bgrid--3 { --n: 1; }
+  .dgrid > .dtile--fill { grid-column: span var(--f2, 1); }
+  .dgrid > .dtile--fill[data-f3="0"] { display: grid; }
+  .dgrid > .dtile--fill[data-f2="0"] { display: none; }
+  .bcard__body { padding: 16px 14px 20px; }
+  .bcard--soon .bcard__body, .bcard--bare .bcard__body { padding-top: 28px; }
+  .bcard__name { font-size: 40px; }
+  .clist--rows .clist__i { grid-template-columns: minmax(0, 1fr); }
+  .clist--rows .clist__i .addq, .clist--rows .clist__i > .btn { grid-column: 1; justify-self: start; }
+  .mbrand { min-width: 0; flex: 1 1 100%; }
   .hdr__in { gap: 10px; }
   .hdr__right { gap: 6px; }
   .hdr__brand .wm__svg { height: 15px; }
@@ -541,7 +667,7 @@ a.clist__fam:hover { color: var(--ink); }
   .fam__title { font-size: clamp(34px, 9vw, 48px); }
   .gal__t { width: 68px; height: 52px; }
   .counts dd { font-size: 30px; }
-  .counts dt { font-size: 9.5px; letter-spacing: .08em; }
+  .counts dt { font-size: 9px; letter-spacing: .06em; font-stretch: 108%; overflow-wrap: anywhere; }
   .counts--light { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .sres__exact { grid-template-columns: 1fr; }
   .sres__exact-img { width: 100%; max-width: 280px; }
@@ -554,6 +680,20 @@ a.clist__fam:hover { color: var(--ink); }
   .hdr__brand .wm__svg { height: 13px; }
   .hdr__quote { padding: 0 10px; }
 }
+/* the narrowest phones (320 px) and a zoomed-in page: the menu button stays on the screen */
+@media (max-width: 350px) {
+  .hdr__in { padding-inline: 14px; gap: 8px; }
+  .hdr__right { gap: 4px; }
+  .hdr__brand .wm__svg { height: 12px; }
+  .hdr__quote { padding: 0 8px; }
+  /* three counts side by side: the labels stay whole words */
+  .counts > div { padding-right: 6px; }
+  .counts > div + div { padding-left: 10px; }
+  .counts dt { font-size: 8.5px; letter-spacing: .02em; font-stretch: 100%; }
+  .counts dd { font-size: 26px; }
+}
+/* the footer's wordmark never runs wider than the screen */
+.ftr__brand .wm, .ftr__brand .wm__svg { max-width: 100%; }
 @media (prefers-reduced-motion: reduce) {
   .tag3d { animation: none; opacity: 1; }
   .cat-wait__bar { animation: none; }

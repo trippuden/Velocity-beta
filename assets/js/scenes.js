@@ -3,7 +3,7 @@
 import { THREE, mats, shopEnvironment, frameObject, blobTexture, glowTexture, easeOutCubic, easeInOutCubic } from './three-kit.js';
 import { build, adasFrame } from './models.js';
 import { buildMT } from './catalog-models.js';
-import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { mergeGeometries } from '../vendor/three/examples/jsm/utils/BufferGeometryUtils.js';
 
 const BG_DARK = '#08090b';
 

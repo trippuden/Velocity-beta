@@ -22,7 +22,9 @@ export const num = (n) => Number(n || 0).toLocaleString('en-US');
 
 // v2: lines are the catalog's part numbers. A quote saved under the old kit list starts fresh.
 const KEY = 'velocity.quote.v2';
-export const isItemId = (id) => /^SP\d{6,7}$/.test(id) || /^F\d{3}$/.test(id);
+// a line is a part number in whatever format its brand prints (SP202002, 48-22-9000) or a product family id (F058).
+// The quote page shows only the lines the catalog knows, so this check just keeps junk out of the saved list.
+export const isItemId = (id) => typeof id === 'string' && /^[A-Za-z0-9][A-Za-z0-9 ./+_-]{1,39}$/.test(id);
 const listeners = new Set();
 export const quote = {
   items: new Map(),
@@ -167,7 +169,7 @@ export function sectionHead({ idx = '', kicker = '', title = '', lede = '', cls 
 export function cite(key) {
   const s = SOURCES[key];
   if (!s) return '';
-  return `<a class="cite" href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.name)}${s.date ? `, ${esc(s.date)}` : ''} ${icon('out')}</a>`;
+  return `<a class="cite" href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.name)}${s.date ? `, ${esc(s.date)}` : ''} ${icon('out')}</a>`;
 }
 
 export function stepper(id, qty, { max = 99, label = '' } = {}) {
@@ -260,6 +262,45 @@ export function notSentPanel(summary) {
     <textarea class="notsent__text" readonly rows="6">${esc(summary)}</textarea>
     <button type="button" class="btn btn--ink btn--sm" data-copy>${icon('copy')}<span>Copy request</span></button>
   </div>`;
+}
+
+/* ---------- text box hints ---------- */
+
+// A hint cut off mid-word reads as broken, most of all on a phone. The hints run longest first and the box shows
+// the first one that fits in its own type at its own width; it picks again when the box changes size.
+export function fitHint(input, hints) {
+  const probe = document.createElement('span');
+  probe.setAttribute('aria-hidden', 'true');
+  probe.style.cssText = 'position:absolute;left:-9999px;top:0;visibility:hidden;white-space:pre;pointer-events:none';
+  let off = false, ro = null;
+  const stop = () => { off = true; if (ro) ro.disconnect(); };
+  const fit = () => {
+    if (off) return;
+    if (!input.isConnected) { stop(); return; }
+    const w = input.clientWidth;
+    let pick = hints[0];
+    if (w) {
+      const cs = getComputedStyle(input);
+      for (const k of ['fontFamily', 'fontSize', 'fontWeight', 'fontStyle', 'fontStretch', 'letterSpacing', 'textTransform']) probe.style[k] = cs[k];
+      // a search box keeps room at its end for the browser's own clear button, even while it is empty
+      const room = w - parseFloat(cs.paddingLeft || 0) - parseFloat(cs.paddingRight || 0) - (input.type === 'search' ? 26 : 2);
+      document.body.appendChild(probe);
+      pick = hints[hints.length - 1];
+      for (const h of hints) { probe.textContent = h; if (probe.getBoundingClientRect().width <= room) { pick = h; break; } }
+      document.body.removeChild(probe);
+    }
+    if (input.placeholder !== pick) input.placeholder = pick;
+  };
+  fit();
+  // the site's typeface can arrive after the first measure: measure again once it is in
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(fit).catch(() => {});
+  if ('ResizeObserver' in window) { ro = new ResizeObserver(fit); ro.observe(input); }
+  return stop;
+}
+// every box under root that lists its hints in data-hints ("long|shorter|shortest")
+export function fitHints(root) {
+  const offs = [...root.querySelectorAll('input[data-hints]')].map(i => fitHint(i, i.dataset.hints.split('|').map(s => s.trim()).filter(Boolean)));
+  return () => offs.forEach(f => f());
 }
 
 /* ---------- motion ---------- */

@@ -1,8 +1,8 @@
 // About and Support. Only what is true and confirmed; everything else is a placeholder the Velocity team fills in.
 import { SITE, STORY } from '../data.js';
-import { esc, rt, icon, sectionHead, revealIn, bindLeadForm, contactFields, contactSummary, scoreLead, num } from '../core.js';
+import { esc, rt, icon, sectionHead, revealIn, bindLeadForm, contactFields, contactSummary, scoreLead, num, fitHints } from '../core.js';
 import { catalog } from '../catalog-data.js';
-import { crumbs, lockMark } from './catalog.js';
+import { crumbs, lockMark, countsSource } from './catalog.js';
 
 export const about = {
   id: 'about', nav: 'about', title: 'About Velocity',
@@ -13,9 +13,12 @@ export const about = {
         <div>
           ${crumbs([['Home', '#home'], ['About']])}
           <h1 class="h1 h1--md">We sell what shops run on.</h1>
-          <p class="lede phead__lede">Velocity is an equipment and supply company for collision shops. We sell the equipment, tools and supplies a body shop runs on, and we train techs on the equipment when they need it. Your shop does the repairs.</p>
+          <p class="lede phead__lede">Velocity is an equipment and supply company for collision shops. We sell the equipment, tools and supplies a body shop runs on, and we train shops on equipment we sell. Your shop does the repairs.</p>
         </div>
-        <dl class="counts counts--light" data-counts></dl>
+        <div>
+          <dl class="counts counts--light" data-counts></dl>
+          <p class="counts__src" data-counts-src></p>
+        </div>
       </div>
     </section>
 
@@ -25,7 +28,7 @@ export const about = {
         <div class="story__body">
           <p>${rt(STORY.origin)}</p>
           <p>Velocity was started by ${rt(STORY.founder)}. It sells collision shops the equipment and supplies they run on: welders and dent pullers, frame benches, spray booths, dust extraction, hand tools, lifts, carts and racks, plus paint, masking and tape.</p>
-          <p>When your techs need to learn a machine, we train them on it.</p>
+          <p>When your techs need to learn a machine, ask about training on your quote.</p>
         </div>
       </div>
     </section>
@@ -34,8 +37,8 @@ export const about = {
       <div class="wrap">
         ${sectionHead({ idx: '01', kicker: 'What we do', title: 'Sell it. Train on it.' })}
         <div class="values">
-          <div class="value" data-reveal><p class="value__t">We sell the equipment.</p><p>The catalog on this site, each product with its part numbers, specs and photos, plus the supplies a shop goes through every week.</p></div>
-          <div class="value" data-reveal data-reveal-d="1"><p class="value__t">We train on it.</p><p>When a tech hasn’t run a machine before, Velocity trains them on it. Ask on your quote.</p></div>
+          <div class="value" data-reveal><p class="value__t">We sell the equipment.</p><p>The catalogs on this site, brand by brand, each product with its part numbers, specs and photos, plus the supplies a shop goes through every week.</p></div>
+          <div class="value" data-reveal data-reveal-d="1"><p class="value__t">We train on it.</p><p>Velocity trains shops on equipment it sells. Tick the training box on your quote and we work it out with your shop.</p></div>
           <div class="value" data-reveal data-reveal-d="2"><p class="value__t">We don’t repair cars.</p><p>Your shop does the repairs and the calibrations. We sell the equipment and help your techs use it.</p></div>
         </div>
       </div>
@@ -57,6 +60,7 @@ export const about = {
       if (gone) return;
       const c = cat.counts;
       el.querySelector('[data-counts]').innerHTML = [[c.codes, 'part numbers'], [c.depts, 'departments'], [c.photos, 'photos']].map(([v, l]) => `<div><dt>${esc(l)}</dt><dd>${num(v)}</dd></div>`).join('');
+      el.querySelector('[data-counts-src]').textContent = countsSource(cat);
     }).catch(() => {});
     return () => { gone = true; offs.forEach(f => f()); };
   },
@@ -81,7 +85,7 @@ export const support = {
       <div class="wrap"><div class="support-grid">
         <div class="scard"><p class="scard__k">Parts and consumables</p><p class="scard__t">Find the part number.</p><p>Search the catalog for the machine, then pick its spare parts, tips, studs, filters or nozzles from its page.</p><a class="link-arrow" href="#search">Search part numbers ${icon('arrow')}</a></div>
         <div class="scard"><p class="scard__k">Warranty</p><p class="scard__t">It depends on the product.</p><p>Ask on your quote and the terms come back with the price.</p></div>
-        <div class="scard"><p class="scard__k">Training</p><p class="scard__t">New to the machine?</p><p>If your techs haven’t run it before, Velocity trains them on it.</p><a class="link-arrow" href="#training">Training ${icon('arrow')}</a></div>
+        <div class="scard"><p class="scard__k">Training</p><p class="scard__t">New to the machine?</p><p>If your techs haven’t run it before, ask about training and Velocity works it out with your shop.</p><a class="link-arrow" href="#training">Training ${icon('arrow')}</a></div>
       </div></div>
     </section>
 
@@ -91,7 +95,7 @@ export const support = {
         <div class="qform qform--dark" data-form-host>
           <form class="form" novalidate data-support-form>
             ${contactFields({ zip: false })}
-            <label class="field"><span>Part number or machine</span><input name="part" required placeholder="For example SP202002, or Digital Mini Spotter"></label>
+            <label class="field"><span>Part number or machine</span><input name="part" required placeholder="For example SP202002" data-hints="For example SP202002, or Digital Mini Spotter|SP202002 or Digital Mini Spotter|For example SP202002"></label>
             <label class="field"><span>What’s happening?</span><textarea name="issue" rows="4" required placeholder="What it does, when it started, any error on the display"></textarea></label>
             <div class="field"><span class="field__l">Best way to reach you</span><div class="choice-row">${[['phone', 'Phone'], ['email', 'Email'], ['text', 'Text']].map(([v, l], i) => `<label class="choice"><input type="radio" name="reach" value="${v}" ${i === 0 ? 'checked' : ''}><span>${l}</span></label>`).join('')}</div></div>
             <div class="form__submit"><button type="submit" class="btn btn--signal btn--lg">Send to Velocity ${icon('arrow')}</button></div>
@@ -110,6 +114,6 @@ export const support = {
       },
       success: { title: 'Support request received.', body: 'Velocity will reach out the way you picked. Keep the reference number above.' },
     });
-    return () => {};
+    return fitHints(el);
   },
 };

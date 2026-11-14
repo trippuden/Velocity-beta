@@ -1,7 +1,7 @@
 // Velocity 3D kit: shared materials, geometry helpers, canvas textures and the shop lighting rig.
 // Units are meters. +Y is up. Product fronts face +Z.
-import * as THREE from 'three';
-import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import * as THREE from '../vendor/three/build/three.module.min.js';
+import { RoundedBoxGeometry } from '../vendor/three/examples/jsm/geometries/RoundedBoxGeometry.js';
 
 export { THREE };
 

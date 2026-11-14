@@ -41,9 +41,9 @@ export const calibration = {
         <div>${sectionHead({ idx: '02', kicker: 'Where it stands', title: 'What we can tell you today.' })}</div>
         <ul class="facts">
           <li><b>Velocity will sell it.</b><span>ADAS calibration equipment joins the catalog once the supplier is chosen.</span></li>
-          <li><b>Velocity will train on it.</b><span>When your techs need it, Velocity trains them on the calibration equipment it sells.</span></li>
+          <li><b>Training is something you ask for.</b><span>Once the lineup is set, ask on your quote and Velocity works it out with your shop.</span></li>
           <li><b>Your tech does the calibration.</b><span>Velocity sells the equipment and trains. It doesn’t calibrate cars or repair them.</span></li>
-          <li><b>No kits or prices yet.</b><span>The lineup, specs and prices go on this page when they’re set, and not before.</span></li>
+          <li><b>No kits listed yet.</b><span>The lineup and its specs go on this page when they’re set, and not before. Prices come on a written quote.</span></li>
         </ul>
       </div>
     </section>
@@ -58,7 +58,7 @@ export const calibration = {
     <section class="sec dark" id="cal-form">
       <div class="wrap two-col">
         <div>
-          ${sectionHead({ idx: '04', kicker: 'Get told first', title: 'Leave your details.', lede: 'Tell us what your shop calibrates today. When the lineup is set, Velocity contacts you with the equipment, the training and the prices.' })}
+          ${sectionHead({ idx: '04', kicker: 'Get told first', title: 'Leave your details.', lede: 'Tell us what your shop calibrates today. When the lineup is set, Velocity contacts you about the equipment.' })}
         </div>
         <div class="qform qform--dark" data-form-host>
           <form class="form" novalidate data-cal-form>
@@ -92,7 +92,7 @@ export const calibration = {
           summary: `CALIBRATION: KEEP ME POSTED\n${contactSummary(d)}\n\nCalibrations today: ${d.today}\nSystems seen most: ${systems.join(', ') || 'not given'}\nNotes: ${d.notes || 'none'}`,
         };
       },
-      success: { title: 'You’re on the list.', body: 'When the calibration lineup is set, Velocity contacts you with the equipment, the training and the prices. Keep the reference number above.' },
+      success: { title: 'You’re on the list.', body: 'When the calibration lineup is set, Velocity contacts you about the equipment. Keep the reference number above.' },
     });
     return () => { gone = true; offs.forEach(f => f()); };
   },

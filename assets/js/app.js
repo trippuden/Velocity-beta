@@ -1,10 +1,11 @@
 // Velocity site shell: header with catalog search, footer, preview tools and the hash router.
 import { SITE, PH, PH_GROUPS, LEGACY, CALIBRATION, DEPT_ALIAS } from './data.js';
 import { esc, rt, icon, quote, syncAddButtons, toast, viewerCanEdit, getDb } from './core.js';
-import { catalog, photoAttrs, famHref, deptHref, nCodes, nPages, loaded } from './catalog-data.js';
+import { catalog, photoAttrs, famHref, deptHref, brandHref, nCodes, nPages, loaded } from './catalog-data.js';
 import { search } from './search.js';
 import { home } from './views/home.js';
-import { catalogIndex, deptPage, familyPage, searchPage, deptOrder } from './views/catalog.js';
+import { catalogIndex, deptPage, familyPage, searchPage, deptOrder, countsSource, nDepts } from './views/catalog.js';
+import { brandsIndex, brandPage } from './views/brands.js';
 import { bay } from './views/bay.js';
 import { calibration } from './views/calibration.js';
 import { training } from './views/training.js';
@@ -49,9 +50,14 @@ function renderHeader() {
   </div>
   <div class="mega" id="mega" hidden>
     <div class="mega__in">
-      <div><p class="mega__h">Departments <span data-mega-count></span></p><div class="mega__depts" data-mega-depts><p class="small" style="color:#8d929a">Loading the catalog…</p></div></div>
+      <div>
+        <p class="mega__h">Brands</p>
+        <div class="mbrands" data-mega-brands></div>
+        <p class="mega__h">Departments <span data-mega-count></span></p>
+        <div class="mega__depts" data-mega-depts><p class="small" style="color:#8d929a">Loading the catalog…</p></div>
+      </div>
       <div class="mega__side">
-        <a class="mega__feature" href="#catalog"><strong>The whole catalog</strong><span data-mega-all>Every department and part number, with photos and specs.</span>${icon('arrow')}</a>
+        <a class="mega__feature" href="#catalog"><strong>The whole catalog</strong><span data-mega-all>Every brand and department, with part numbers, photos and specs.</span>${icon('arrow')}</a>
         <a class="mega__feature" href="#bay"><strong>Build your bay</strong><span>Drop real catalog products into a 3D bay and send the whole bay as one quote.</span>${icon('arrow')}</a>
         <a class="mega__feature" href="#quote"><strong>Paint, masking and tape</strong><span>Velocity carries shop supplies too. Send your own list with your quote.</span>${icon('arrow')}</a>
       </div>
@@ -66,7 +72,11 @@ function renderHeader() {
         <div class="hs__drop" id="hs-drop-m" role="listbox" hidden></div>
       </form>
       <a href="#catalog">Catalog</a>
-      <div class="mnav__depts" data-mnav-depts></div>
+      <div class="mnav__grp" data-mnav-brands hidden></div>
+      <details class="mnav__fold" data-mnav-fold hidden>
+        <summary><span>Shop by department</span><span class="mnav__n" data-mnav-n></span>${icon('down')}</summary>
+        <div class="mnav__depts" data-mnav-depts></div>
+      </details>
       <a href="#bay">Build your bay</a>
       <a href="#calibration">Calibration equipment</a>
       <a href="#training">Training</a>
@@ -135,12 +145,21 @@ function renderHeader() {
   catalog().then(cat => {
     const depts = deptOrder(cat);
     $('[data-mega-count]').textContent = String(cat.depts.length);
-    $('[data-mega-all]').textContent = `${nCodes(cat.counts.codes)} in ${cat.counts.depts} departments, with photos and specs. More lines are being added.`;
+    $('[data-mega-all]').textContent = `${nCodes(cat.counts.codes)} in ${nDepts(cat.depts.length)}. ${countsSource(cat)}`;
+    // a brand whose catalog is listed shows how much of it there is; one that is named but not listed yet says so
+    const brandMeta = (b) => (b.live ? nCodes(b.codes) : 'Catalog being added');
+    $('[data-mega-brands]').innerHTML = cat.brands.map(b => `<a class="mbrand ${b.live ? '' : 'mbrand--soon'}" href="${brandHref(b)}"><span class="mbrand__n">${esc(b.name)}</span><span class="mbrand__c">${brandMeta(b)}</span>${icon('arrow')}</a>`).join('')
+      + `<a class="mbrand mbrand--all" href="#brands"><span class="mbrand__n">All brands</span>${icon('arrow')}</a>`;
+    const mb = $('[data-mnav-brands]');
+    mb.innerHTML = `<p class="mnav__h">Shop by brand</p>${cat.brands.map(b => `<a class="mnav__sub" href="${brandHref(b)}"><span>${esc(b.name)}</span><span class="mnav__c">${brandMeta(b)}</span></a>`).join('')}`;
+    mb.hidden = false;
+    $('[data-mnav-n]').textContent = String(cat.depts.length);
+    $('[data-mnav-fold]').hidden = false;
     $('[data-mega-depts]').innerHTML = depts.map(d => `<a class="mdept" href="${deptHref(d)}">
         <span class="mdept__img"><img ${photoAttrs(d.hero, 'set/heroes')} alt="" decoding="async"></span>
         <span class="mdept__t"><span class="mdept__n">${esc(d.name)}</span><span class="mdept__c">${nCodes(d.codes)}</span></span>
       </a>`).join('') + `<a class="mdept mdept--cal" href="#calibration"><span class="mdept__img mdept__img--cal" aria-hidden="true"><span class="caltarget"></span></span><span class="mdept__t"><span class="mdept__n">${esc(CALIBRATION.name)}</span><span class="mdept__c mdept__c--status">${esc(CALIBRATION.status)}</span></span></a>`;
-    $('[data-mnav-depts]').innerHTML = depts.map(d => `<a class="mnav__sub" href="${deptHref(d)}">${esc(d.name)}</a>`).join('');
+    $('[data-mnav-depts]').innerHTML = depts.map(d => `<a class="mnav__sub" href="${deptHref(d)}"><span>${esc(d.name)}</span></a>`).join('') + `<a class="mnav__sub" href="#calibration"><span>${esc(CALIBRATION.name)}</span><span class="mnav__c">${esc(CALIBRATION.status)}</span></a>`;
     // the placeholder in the header box says how much there is to search, when the box is wide enough to say it
     const box = $('#hs-q'), long = `Search ${cat.counts.codes.toLocaleString('en-US')} part numbers`;
     const fit = () => { box.placeholder = box.clientWidth >= 252 || !box.clientWidth ? long : 'Search part numbers'; };
@@ -166,9 +185,11 @@ function bindSearch(form) {
     const r = search(cat, q, { famLimit: 5, codeLimit: 6 });
     const nf = r.totalFams ?? r.fams.length, nc = r.totalCodes ?? r.codes.length;
     const codes = r.exact ? [r.exact, ...r.codes.filter(c => c !== r.exact)].slice(0, 6) : r.codes.slice(0, 6);
-    drop.innerHTML = `${r.fams.length ? `<p class="hs__h">Products</p>${r.fams.map(f => `<a class="hs__i" role="option" href="${famHref(f)}"><span class="hs__img">${f.photo ? `<img ${photoAttrs(f.photo, f.lp, true)} alt="" decoding="async">` : ''}</span><span class="hs__t"><span class="hs__n">${esc(f.name)}</span><span class="hs__m">${esc(cat.dept[f.dept].name)} · ${nCodes(f.all)}</span></span></a>`).join('')}` : ''}
+    const mixed = new Set([...r.fams.map(f => f.brand), ...codes.map(c => cat.fam[c.fid].brand)]).size > 1;
+    drop.innerHTML = `${r.brands.length ? `<p class="hs__h">Brands</p>${r.brands.map(b => `<a class="hs__i hs__i--brand" role="option" href="${brandHref(b)}"><span class="hs__t"><span class="hs__n">${esc(b.name)}</span><span class="hs__m">${b.live ? `${nCodes(b.codes)} in ${nDepts(b.depts.length)}` : 'Catalog being added'}</span></span>${icon('arrow')}</a>`).join('')}` : ''}
+      ${r.fams.length ? `<p class="hs__h">Products</p>${r.fams.map(f => `<a class="hs__i" role="option" href="${famHref(f)}"><span class="hs__img">${f.photo ? `<img ${photoAttrs(f.photo, f.lp, true)} alt="" decoding="async">` : ''}</span><span class="hs__t"><span class="hs__n">${esc(f.name)}</span><span class="hs__m">${mixed ? `${esc(cat.brand[f.brand].name)} · ` : ''}${esc(cat.dept[f.dept].name)} · ${nCodes(f.all)}</span></span></a>`).join('')}` : ''}
       ${codes.length ? `<p class="hs__h">Part numbers</p>${codes.map(c => `<a class="hs__i hs__i--code" role="option" href="${famHref(cat.fam[c.fid], c.code)}"><span class="pn">${esc(c.code)}</span><span class="hs__t"><span class="hs__n">${esc(c.label)}</span></span></a>`).join('')}` : ''}
-      ${nf || nc ? `<a class="hs__all" role="option" href="#search/${encodeURIComponent(q)}">See all results for “${esc(q)}” <span>${[nc && nCodes(nc), nf && nPages(nf)].filter(Boolean).join(', ')}</span>${icon('arrow')}</a>` : `<p class="hs__none">Nothing in the catalog matches “${esc(q)}”. Velocity carries more than the catalog: <a href="#quote">ask on a quote</a>.</p>`}`;
+      ${nf || nc ? `<a class="hs__all" role="option" href="#search/${encodeURIComponent(q)}">See all results for “${esc(q)}” <span>${[nc && nCodes(nc), nf && nPages(nf)].filter(Boolean).join(', ')}</span>${icon('arrow')}</a>` : r.brands.length ? '' : `<p class="hs__none">Nothing in the catalog matches “${esc(q)}”. Velocity carries more than the site lists: <a href="#quote" data-quote-note="${esc(q)}">ask on a quote</a>.</p>`}`;
     items = [...drop.querySelectorAll('.hs__i, .hs__all')];
     drop.hidden = false; form.classList.add('is-open'); input.setAttribute('aria-expanded', 'true');
     setActive(-1);
@@ -220,18 +241,20 @@ function renderFooter() {
       <p class="ftr__contact"><a href="${SITE.phoneHref}">${icon('phone')} ${rt(SITE.phone)}</a><span>${icon('mail')} ${rt(SITE.email)}</span></p>
     </div>
     <nav class="ftr__cols" aria-label="Footer">
-      <div data-ftr-depts><p class="ftr__h">Catalog</p><a href="#catalog">All departments</a></div>
+      <div data-ftr-brands><p class="ftr__h">Brands</p><a href="#brands">All brands</a></div>
+      <div data-ftr-depts><p class="ftr__h">Departments</p><a href="#catalog">All departments</a></div>
       <div><p class="ftr__h">Velocity</p><a href="#bay">Build your bay</a><a href="#calibration">Calibration equipment</a><a href="#training">Training</a><a href="#about">About Velocity</a><a href="#support">Support</a></div>
       <div><p class="ftr__h">Your quote</p><a href="#quote">Get a quote</a><a href="#search">Search part numbers</a><a href="#leads" data-editor-only hidden>Leads inbox</a></div>
     </nav>
   </div>
   <div class="ftr__bottom">
-    <p>&copy; ${new Date().getFullYear()} ${rt(SITE.legal)}. Velocity sells equipment and supplies and trains technicians on the equipment. We do not repair vehicles.</p>
-    <p class="ftr__note">Product photos, part numbers and specs are shown as the factory publishes them. Prices come on your written quote.</p>
+    <p>&copy; ${new Date().getFullYear()} ${rt(SITE.legal)}. Velocity sells equipment and supplies and trains shops on equipment it sells. We do not repair vehicles.</p>
+    <p class="ftr__note">Product photos, part numbers and specs are shown as each maker publishes them. Brand names belong to their owners. Prices come on your written quote.</p>
   </div>`;
   catalog().then(cat => {
     const box = $('[data-ftr-depts]');
-    box.innerHTML = `<p class="ftr__h">Catalog</p>${deptOrder(cat).slice(0, 8).map(d => `<a href="${deptHref(d)}">${esc(d.name)}</a>`).join('')}<a href="#catalog">All ${cat.counts.depts} departments</a>`;
+    box.innerHTML = `<p class="ftr__h">Departments</p>${deptOrder(cat).slice(0, 8).map(d => `<a href="${deptHref(d)}">${esc(d.name)}</a>`).join('')}<a href="#catalog">All ${cat.depts.length} departments</a>`;
+    $('[data-ftr-brands]').innerHTML = `<p class="ftr__h">Brands</p>${cat.brands.map(b => `<a href="${brandHref(b)}">${esc(b.name)}</a>`).join('')}<a href="#brands">All brands</a>`;
   }).catch(() => {});
 }
 
@@ -269,21 +292,27 @@ function closeDrawer() { const d = $('#drawer'); if (!d.classList.contains('is-o
 
 /* ---------- router ---------- */
 
-const STATIC = { '': home, home, catalog: catalogIndex, bay, calibration, training, about, support, quote: quotePage, leads };
+const STATIC = { '': home, home, catalog: catalogIndex, brands: brandsIndex, bay, calibration, training, about, support, quote: quotePage, leads };
 
 function resolve(name) {
   if (STATIC[name]) return STATIC[name];
   let m;
   if ((m = name.match(/^d-([a-z-]+)$/))) return m[1] === 'calibration' ? { redirect: 'calibration' } : DEPT_ALIAS[m[1]] ? { redirect: `d-${DEPT_ALIAS[m[1]]}` } : deptPage(m[1]);
-  // a product, with the part number to open it on at the end: p-f009-digital-mini-spotter-SP202018
-  if ((m = name.match(/^p-(f\d{3})(?:-(.*))?$/i))) {
-    const code = (m[2] || '').match(/(?:^|-)(sp\d{6,7})$/i);
-    return familyPage(m[1].toUpperCase(), code ? code[1].toUpperCase() : '');
-  }
+  // a brand's catalog, and its part of one department: b-martech, b-martech-d-welding
+  if ((m = name.match(/^b-([a-z0-9]+)(?:-d-([a-z-]+))?$/))) return m[2] ? deptPage(DEPT_ALIAS[m[2]] || m[2], m[1]) : brandPage(m[1]);
+  // a product, with the part number to open it on at the end: p-f009-digital-mini-spotter-SP202018.
+  // A family id is one to three letters and three to six digits, so another brand's products need no new route.
+  if ((m = name.match(/^p-([a-z]{1,3}\d{3,6})(?:-(.*))?$/i))) return familyPage(m[1].toUpperCase(), m[2] || '');
   // the earlier address forms (d/welding, p/f009-slug/SP202018) open the same pages
   if ((m = name.match(/^d\/([a-z-]+)$/))) return { redirect: m[1] === 'calibration' ? 'calibration' : `d-${DEPT_ALIAS[m[1]] || m[1]}` };
-  if ((m = name.match(/^p\/(f\d{3})(?:-[a-z0-9-]*)?(?:\/(sp\d{6,7}))?$/i))) return familyPage(m[1].toUpperCase(), m[2] ? m[2].toUpperCase() : '');
-  if ((m = name.match(/^search(?:\/(.*))?$/))) return searchPage((m[1] || '').trim());
+  if ((m = name.match(/^p\/(f\d{3})(?:-[a-z0-9-]*)?(?:\/(sp\d{6,7}))?$/i))) return familyPage(m[1].toUpperCase(), m[2] || '');
+  // search, across every brand or inside one: search/spot welder, search/spot welder/b-martech
+  if ((m = name.match(/^search(?:\/(.*))?$/))) {
+    let q = m[1] || '';
+    const b = q.match(/(?:^|\/)b-([a-z0-9]+)$/);
+    if (b) q = q.slice(0, b.index);
+    return searchPage(q.trim(), b ? b[1] : '');
+  }
   // links from earlier previews
   if (/^course-/.test(name)) return { redirect: 'training' };
   if (/^equipment-/.test(name)) return { redirect: 'catalog' };
@@ -333,7 +362,7 @@ function route() {
 
 document.addEventListener('click', e => {
   const a = e.target.closest('a[href^="#"]');
-  if (!a || e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey) return;
+  if (!a || e.defaultPrevented || e.metaKey || e.ctrlKey || e.shiftKey || a.hasAttribute('data-scroll')) return;
   const target = a.getAttribute('href');
   if (target === location.hash || (target === '#home' && !location.hash)) {
     e.preventDefault();
@@ -366,7 +395,9 @@ document.addEventListener('click', e => {
   if (add) {
     const id = add.dataset.add, label = add.dataset.label || id;
     quote.add(id, 1);
-    toast(`<strong>${esc(/^SP\d/.test(id) ? `${id} ${label}` : label)}</strong> is in your quote.`, { action: { href: '#quote', label: 'View quote' } });
+    // a part number is named with what it is; a product the catalog prints no number for goes by its name
+    const cat = loaded();
+    toast(`<strong>${esc(cat && cat.codes.has(id) && label !== id ? `${id} ${label}` : label)}</strong> is in your quote.`, { action: { href: '#quote', label: 'View quote' } });
     return;
   }
   const step = e.target.closest('[data-stepper] [data-step]');
@@ -374,6 +405,16 @@ document.addEventListener('click', e => {
     const id = step.closest('[data-stepper]').dataset.stepper;
     quote.set(id, quote.qty(id) + Number(step.dataset.step));
   }
+});
+
+// "Reload" on a page that didn't load (a listener, so the page needs no inline script)
+document.addEventListener('click', e => { if (e.target.closest('[data-reload]')) location.reload(); });
+
+// links that open the quote with a line already started under "Not in the catalog?" (a brand whose catalog isn't
+// on the site yet, a search that found nothing). Read once by the quote page.
+document.addEventListener('click', e => {
+  const a = e.target.closest('[data-quote-note]');
+  if (a) { try { sessionStorage.setItem('velocity.quote.note', a.dataset.quoteNote); } catch { /* storage off: the quote opens without it */ } }
 });
 
 $('[data-skip]').addEventListener('click', () => { main.focus(); main.scrollIntoView(); });

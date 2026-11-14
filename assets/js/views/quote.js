@@ -1,5 +1,6 @@
-// The quote: a list of catalog part numbers (or product families the book prints no number for), anything the
-// shop wants that isn't in the catalog, and the shop's details. Velocity prices it in writing. No prices on the site.
+// The quote: a list of catalog part numbers (or product families a catalog prints no number for), each with its
+// brand, anything the shop wants that isn't in the catalog, and the shop's details. Velocity prices it in writing.
+// No prices on the site.
 import { esc, icon, quote, stepper, bindLeadForm, contactFields, contactSummary, scoreLead, getDb, viewerCanEdit, copyText } from '../core.js';
 import { catalog, resolveItem, famHref, famPack, loaded } from '../catalog-data.js';
 import { crumbs, photo } from './catalog.js';
@@ -21,6 +22,7 @@ export const quotePage = {
       <div class="wrap quote">
         <div>
           <p class="prod__h"><span>Your list</span><span data-qcount-label></span></p>
+          <div data-qhint></div>
           <div data-qlist></div>
           <p class="small muted" style="margin-top:18px" data-source></p>
           <div class="row-gap" data-qtools><a class="btn btn--line btn--sm" href="#catalog">${icon('plus')}<span>Add from the catalog</span></a><a class="btn btn--line btn--sm" href="#bay">Build your bay</a><a class="btn btn--line btn--sm" href="#search">${icon('search')}<span>Search part numbers</span></a></div>
@@ -30,7 +32,7 @@ export const quotePage = {
           <p>So the quote matches your shop the first time.</p>
           <form class="form" novalidate data-quote-form>
             ${contactFields()}
-            <label class="field"><span>Not in the catalog? <span class="field__opt">(optional)</span></span><textarea name="extra" rows="3" placeholder="Paint, masking paper, tape, abrasives, anything else: brand, size and how many"></textarea></label>
+            <label class="field" id="q-extra"><span>Not in the catalog? <span class="field__opt">(optional)</span></span><textarea name="extra" rows="3" placeholder="Paint, masking paper, tape, abrasives, a brand that isn’t listed yet: brand, size and how many"></textarea></label>
             <div class="form__row">
               <label class="field"><span>Shop power</span><select name="power">${POWER.map(([v, l]) => `<option value="${v}">${l}</option>`).join('')}</select></label>
               <label class="field"><span>Bays</span><select name="bays" required><option value="">How many?</option><option value="1">1</option><option value="2-4">2 to 4</option><option value="5-9">5 to 9</option><option value="10+">10 or more</option></select></label>
@@ -63,7 +65,7 @@ export const quotePage = {
         const href = it ? famHref(it.fam, it.code) : '#catalog';
         return `<div class="qline" data-line="${esc(id)}">
           <a class="qline__img" href="${href}">${it && it.photo ? photo(it.photo, { pack: famPack(it.fam.id) }) : ''}</a>
-          <div><p class="qline__m">${it && it.code ? esc(it.code) : 'Part number on request'}</p><p class="qline__n"><a href="${href}">${esc(it ? it.label : id)}</a></p>${it && it.label !== it.fam.name ? `<p class="qline__p">${esc(it.fam.name)}</p>` : ''}</div>
+          <div><p class="qline__m">${it && it.code ? esc(it.code) : cat && !it ? 'Not in the catalog now' : 'Part number on request'}${it ? `<span class="qline__b">${esc(it.brand.name)}</span>` : ''}</p><p class="qline__n"><a href="${href}">${esc(it ? it.label : id)}</a></p>${it && it.label !== it.fam.name ? `<p class="qline__p">${esc(it.fam.name)}</p>` : ''}</div>
           <div class="qline__r">${stepper(id, qty, { label: it ? it.label : id, max: 999 })}<button type="button" class="qline__x" data-remove="${esc(id)}">Remove</button></div>
         </div>`;
       }).join('')}</div>
@@ -82,17 +84,30 @@ export const quotePage = {
     catalog().then(() => { if (!gone) paint(); }).catch(() => {});
 
     const form = el.querySelector('[data-quote-form]');
+    // a link that asked for something the catalog doesn't list ("Ask for Milwaukee on a quote") starts that line
+    // under "Not in the catalog?" and says so at the top, where a phone lands
+    let note = '';
+    try { note = sessionStorage.getItem('velocity.quote.note') || ''; sessionStorage.removeItem('velocity.quote.note'); } catch { /* storage off */ }
+    note = note.slice(0, 120);
+    if (note.trim()) {
+      const box = form.extra;
+      if (!box.value.includes(note.trim())) box.value = box.value ? `${box.value.replace(/\s+$/, '')}\n${note}` : note;
+      const what = note.trim().replace(/:$/, '');
+      el.querySelector('[data-qhint]').innerHTML = `<p class="note qhint">${icon('plus')}<span><b>${esc(what)}</b> is started on your quote under “Not in the catalog?”. Add the tools or part numbers you want and how many.</span><a class="link-arrow" href="#q-extra" data-scroll="q-extra">Go to it ${icon('arrow')}</a></p>`;
+      // a keyboard that pops up on a phone would cover the page: only a mouse-and-keyboard screen gets the cursor
+      if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) { box.focus({ preventScroll: true }); box.setSelectionRange(box.value.length, box.value.length); }
+    }
     bindLeadForm(form, {
       type: 'quote', prefix: 'Q',
       build: (d) => {
         const cat = loaded();
-        const items = quote.lines().map(({ id, qty }) => { const it = cat ? resolveItem(cat, id) : null; return { id, code: it ? it.code : '', label: it ? it.label : id, family: it ? it.fam.name : '', qty }; });
+        const items = quote.lines().map(({ id, qty }) => { const it = cat ? resolveItem(cat, id) : null; return { id, code: it ? it.code : '', label: it ? it.label : id, family: it ? it.fam.name : '', brand: it ? it.brand.name : '', qty }; });
         const units = items.reduce((s, i) => s + i.qty, 0);
         const sc = scoreLead({ timeline: d.timeline, role: d.role, bays: d.bays, lines: items.length + (d.extra ? 1 : 0), units });
         const power = (POWER.find(([v]) => v === d.power) || POWER[0])[1];
         return {
           lead: { name: d.name, shop: d.shop, email: d.email, phone: d.phone, zip: d.zip, role: d.role, score: sc.score, tier: sc.tier, items, lines: items.length, units, source: quote.source || '', details: { bays: d.bays, power, timeline: d.timeline, training: d.training === 'yes' ? 'yes' : 'no', extra: d.extra || '', notes: d.notes || '' } },
-          summary: `QUOTE REQUEST\n${contactSummary(d)}\n\nBays: ${d.bays}\nShop power: ${power}\nTimeline: ${d.timeline}\nTraining wanted: ${d.training === 'yes' ? 'yes' : 'no'}\n\nList:\n${items.length ? items.map(i => `  ${i.qty} x ${i.code || '(no part number)'} ${i.label}`).join('\n') : '  nothing from the catalog'}\n\nNot in the catalog: ${d.extra || 'none'}\n${quote.source ? `Started from: ${quote.source}\n` : ''}Notes: ${d.notes || 'none'}`,
+          summary: `QUOTE REQUEST\n${contactSummary(d)}\n\nBays: ${d.bays}\nShop power: ${power}\nTimeline: ${d.timeline}\nTraining wanted: ${d.training === 'yes' ? 'yes' : 'no'}\n\nList:\n${items.length ? items.map(i => `  ${i.qty} x ${i.code || '(no part number)'} ${i.label}${i.brand ? ` [${i.brand}]` : ''}`).join('\n') : '  nothing from the catalog'}\n\nNot in the catalog: ${d.extra || 'none'}\n${quote.source ? `Started from: ${quote.source}\n` : ''}Notes: ${d.notes || 'none'}`,
         };
       },
       success: { title: 'Quote request received.', body: 'Velocity prices your list and sends back a written quote. Keep the reference number above handy.' },
