@@ -1,4 +1,4 @@
-// The product catalog, built from the maker's catalogue v7.0 (assets/data, made by velocity-build/catalog/build.py).
+// The product catalog (assets/data, made by velocity-build/catalog/build.py).
 // index.json holds every department, product family and part number; a department's detail file is loaded the
 // first time one of its product pages opens. Nothing here has a price: the book prints none.
 import { DEPT_EXTRA } from './data.js';
@@ -82,7 +82,7 @@ function build(raw) {
   const dept = Object.fromEntries(depts.map(d => [d.id, d]));
   // which department pack holds each family's card photo, and the department's own photo
   depts.forEach(d => { d.hp = `d/${d.id}.0`; d.fams.forEach((id, i) => { fam[id].lp = `d/${d.id}.${Math.floor(i / LIST_CHUNK)}`; }); });
-  CAT = { depts, dept, fams, fam, codes, counts: raw.counts, source: raw.source };
+  CAT = { depts, dept, fams, fam, codes, counts: raw.counts };
   return CAT;
 }
 
@@ -107,4 +107,5 @@ export function resolveItem(cat, id) {
 
 // "1 part number" / "11 part numbers"
 export const nCodes = (n) => `${n.toLocaleString('en-US')} part number${n === 1 ? '' : 's'}`;
-export const nFams = (n) => `${n.toLocaleString('en-US')} product${n === 1 ? '' : 's'}`;
+// a product page holds one product with its versions and accessories, or a range of tools: it is not a count of products
+export const nPages = (n) => `${n.toLocaleString('en-US')} product page${n === 1 ? '' : 's'}`;

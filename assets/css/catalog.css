@@ -118,6 +118,8 @@
 .counts dt { font: 700 10.5px/1.2 var(--wide); font-stretch: 125%; letter-spacing: .14em; text-transform: uppercase; color: var(--mute); }
 .counts dd { margin: 0; font: 800 clamp(30px, 3vw, 46px)/1 var(--display); font-stretch: 75%; letter-spacing: -.008em; font-variant-numeric: tabular-nums; }
 .counts--light { align-self: end; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+/* three counts (part numbers, departments, photos): the count of product pages is not shown, it reads as a count of products */
+.counts--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .bigsearch { position: relative; display: flex; align-items: center; margin-top: clamp(28px, 3.4vw, 44px); height: 62px; border: 1px solid var(--ink); background: #fff; max-width: 980px; }
 .bigsearch > .ic { position: absolute; left: 20px; width: 22px; height: 22px; color: var(--mute); pointer-events: none; }
 .bigsearch input { flex: 1; min-width: 0; height: 100%; padding: 0 16px 0 54px; border: 0; background: transparent; font: 500 17px/1 var(--font); -webkit-appearance: none; appearance: none; }
@@ -471,9 +473,9 @@ a.clist__fam:hover { color: var(--ink); }
   .counts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .counts > div:nth-child(3) { padding-left: 0; border-left: 0; }
   .counts > div:nth-child(n + 3) { padding-top: 12px; margin-top: 10px; border-top: 1px solid var(--line); }
-  .counts--light { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .counts--light > div:nth-child(3) { padding-left: 14px; border-left: 1px solid var(--line); }
-  .counts--light > div:nth-child(n + 3) { padding-top: 14px; margin-top: 0; border-top: 0; }
+  .counts--light, .counts--3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .counts--light > div:nth-child(3), .counts--3 > div:nth-child(3) { padding-left: 14px; border-left: 1px solid var(--line); }
+  .counts--light > div:nth-child(n + 3), .counts--3 > div:nth-child(n + 3) { padding-top: 14px; margin-top: 0; border-top: 0; }
 }
 @media (max-width: 960px) {
   .cat-head__row, .dhead__grid, .fam__grid, .calband__head, .trainb--light { grid-template-columns: 1fr; }

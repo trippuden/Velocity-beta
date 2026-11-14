@@ -34,7 +34,7 @@ export const about = {
       <div class="wrap">
         ${sectionHead({ idx: '01', kicker: 'What we do', title: 'Sell it. Train on it.' })}
         <div class="values">
-          <div class="value" data-reveal><p class="value__t">We sell the equipment.</p><p>The catalog on this site, each product with its maker’s part numbers, specs and photos, plus the supplies a shop goes through every week.</p></div>
+          <div class="value" data-reveal><p class="value__t">We sell the equipment.</p><p>The catalog on this site, each product with its part numbers, specs and photos, plus the supplies a shop goes through every week.</p></div>
           <div class="value" data-reveal data-reveal-d="1"><p class="value__t">We train on it.</p><p>When a tech hasn’t run a machine before, Velocity trains them on it. Ask on your quote.</p></div>
           <div class="value" data-reveal data-reveal-d="2"><p class="value__t">We don’t repair cars.</p><p>Your shop does the repairs and the calibrations. We sell the equipment and help your techs use it.</p></div>
         </div>
@@ -56,7 +56,7 @@ export const about = {
     catalog().then(cat => {
       if (gone) return;
       const c = cat.counts;
-      el.querySelector('[data-counts]').innerHTML = [[c.depts, 'departments'], [c.fams, 'products'], [c.codes, 'part numbers']].map(([v, l]) => `<div><dt>${esc(l)}</dt><dd>${num(v)}</dd></div>`).join('');
+      el.querySelector('[data-counts]').innerHTML = [[c.codes, 'part numbers'], [c.depts, 'departments'], [c.photos, 'photos']].map(([v, l]) => `<div><dt>${esc(l)}</dt><dd>${num(v)}</dd></div>`).join('');
     }).catch(() => {});
     return () => { gone = true; offs.forEach(f => f()); };
   },
@@ -80,7 +80,7 @@ export const support = {
     <section class="sec sec--tight" style="padding-top:0">
       <div class="wrap"><div class="support-grid">
         <div class="scard"><p class="scard__k">Parts and consumables</p><p class="scard__t">Find the part number.</p><p>Search the catalog for the machine, then pick its spare parts, tips, studs, filters or nozzles from its page.</p><a class="link-arrow" href="#search">Search part numbers ${icon('arrow')}</a></div>
-        <div class="scard"><p class="scard__k">Warranty</p><p class="scard__t">It depends on the product.</p><p>Warranty terms come from each product’s maker. Ask on your quote and the terms come back with the price.</p></div>
+        <div class="scard"><p class="scard__k">Warranty</p><p class="scard__t">It depends on the product.</p><p>Ask on your quote and the terms come back with the price.</p></div>
         <div class="scard"><p class="scard__k">Training</p><p class="scard__t">New to the machine?</p><p>If your techs haven’t run it before, Velocity trains them on it.</p><a class="link-arrow" href="#training">Training ${icon('arrow')}</a></div>
       </div></div>
     </section>

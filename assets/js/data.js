@@ -1,10 +1,10 @@
 /* Velocity site content.
-   The product catalog itself (21 departments, 416 product families, 2,391 part numbers, 1,866 photos) is data in
-   assets/data and photo packs in assets/p, built from the maker's catalogue v7.0 (the book prints 419 families; three
-   of them are printed twice, and the site lists each once). This file holds everything else: contact details, the pages'
-   words, the bay builder's products and the old links.
+   The product catalog itself (21 departments, 2,391 part numbers on 416 product pages, 1,866 photos) is data in
+   assets/data and photo packs in assets/p. A product page is one product with its versions and accessories, or a range
+   of tools, so the site counts part numbers, never "products". This file holds everything else: contact details, the
+   pages' words, the bay builder's products and the old links.
    Rules this content follows (Tripp, Nov 2026): no made-up facts, customers or claims; no response-time or
-   support-speed promises; no prices the catalogue doesn't have; a price that is still a proposal says so.
+   support-speed promises; no prices the catalog doesn't have; a price that is still a proposal says so.
    Anything wrapped in ph() is a placeholder that still needs a real answer from the Velocity team: ph() registers it
    in PH so the preview's "What we need" list stays complete. */
 
@@ -85,7 +85,7 @@ export const STATS = [
 /* ---------- how buying works (home, catalog, quote) ---------- */
 
 export const STEPS = [
-  { t: 'Find it', b: 'Search a part number or a product, or open a department. Every listing carries its maker’s code, specs and photos.' },
+  { t: 'Find it', b: 'Search a part number or a product, or open a department. Every listing carries its part numbers, specs and photos.' },
   { t: 'Build your list', b: 'Add what you need to your quote, with quantities. Send your own list too, paint, masking and tape included.' },
   { t: 'Get it priced', b: 'Velocity prices the list in writing and confirms the voltage and version for your shop before you order.' },
   { t: 'Train on it', b: 'If your techs haven’t run a machine before, Velocity trains them on it. Ask for it on the quote.' },
@@ -96,11 +96,11 @@ export const STEPS = [
 export const FAQ = [
   { q: 'Do you repair cars?', a: 'No. Velocity sells equipment, tools and supplies to collision shops, and trains techs on the equipment when they need it. Your shop does the repairs.' },
   { q: 'Why are there no prices on the site?', a: 'Prices depend on what you order, how many, and where it ships. Add part numbers to your quote and send it, and Velocity sends back a written price.' },
-  { q: 'The specs say 230 V or 400 V. Will it run in my shop?', a: 'Specs on this site are printed the way each maker prints them: metric units, and European voltages for most machines. Tell us your shop’s power on the quote so the right version gets quoted.' },
-  { q: 'Can I order something that isn’t on the site?', a: 'Ask. Velocity carries paint, masking, tape and shop supplies, and lines from other makers that aren’t listed here yet. Put the items in the notes of your quote, or send your list.' },
+  { q: 'The specs say 230 V or 400 V. Will it run in my shop?', a: 'Specs on this site are shown the way the factory prints them: metric units, and European voltages for most machines. Tell us your shop’s power on the quote so the right version gets quoted.' },
+  { q: 'Can I order something that isn’t on the site?', a: 'Ask. Velocity carries paint, masking, tape and shop supplies, and more lines that aren’t listed here yet. Put the items in the notes of your quote, or send your list.' },
   { q: 'Do you train on the equipment?', a: 'Yes, when your techs need it. Tell us what you’re buying and who needs to learn it, and Velocity sets the training up with you.' },
   { q: 'Do you sell calibration equipment?', a: 'It’s coming. Velocity is choosing the supplier now. Leave your details on the Calibration page and we’ll let you know when the lineup is set.' },
-  { q: 'What warranty comes with it?', a: 'It depends on the product and its maker. Ask on your quote and the terms come back with the price.' },
+  { q: 'What warranty comes with it?', a: 'It depends on the product. Ask on your quote and the terms come back with the price.' },
 ];
 
 /* ---------- training (the page states only what Velocity has confirmed: it trains on what it sells, when needed) ---------- */

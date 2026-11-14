@@ -1,8 +1,8 @@
 // The catalog: department index, department pages, product family pages and search results.
-// Every product, part number, spec and photo comes from the maker's catalogue (assets/data). Nothing here has a price.
+// Every product, part number, spec and photo comes from the catalog data (assets/data). Nothing here has a price.
 import { CALIBRATION, HOME_DEPTS, TRAINING } from '../data.js';
 import { esc, icon, addButton, syncAddButtons, revealIn, num } from '../core.js';
-import { catalog, detail, photoAttrs, photoURL, famPack, famHref, deptHref, nCodes, nFams, loaded } from '../catalog-data.js';
+import { catalog, detail, photoAttrs, photoURL, famPack, famHref, deptHref, nCodes, nPages, loaded } from '../catalog-data.js';
 import { search } from '../search.js';
 
 const SP = /^SP\d{6,7}$/;
@@ -42,7 +42,7 @@ export function deptTile(d, { big = false } = {}) {
   return `<a class="dtile ${big ? 'dtile--big' : ''}" href="${deptHref(d)}">
     <span class="dtile__img">${photo(d.hero, { pack: 'set/heroes' })}</span>
     <span class="dtile__body">
-      <span class="dtile__n"><span>${nFams(d.nf)}</span><span>${nCodes(d.codes)}</span></span>
+      <span class="dtile__n"><span>${nCodes(d.codes)}</span></span>
       <span class="dtile__name">${esc(d.name)} ${icon('arrow')}</span>
       ${subs.length ? `<span class="dtile__subs">${esc(subs.slice(0, 4).join(' · '))}${subs.length > 4 ? ` · ${subs.length - 4} more` : ''}</span>` : `<span class="dtile__subs">${esc(d.blurb)}</span>`}
     </span>
@@ -71,7 +71,7 @@ export const crumbs = (items) => `<nav class="crumbs" aria-label="Breadcrumb">${
   return i === 0 ? inner : `<span>${inner}</span>`;
 }).join('')}</nav>`;
 
-const powerNote = `<p class="note">${icon('bolt')}<span>Specs are printed the way each maker prints them: metric units, and European voltages (230 V or 400 V) for most machines. Tell us your shop’s power on the quote and the right version gets quoted.</span></p>`;
+const powerNote = `<p class="note">${icon('bolt')}<span>Specs are shown the way the factory prints them: metric units, and European voltages (230 V or 400 V) for most machines. Tell us your shop’s power on the quote and the right version gets quoted.</span></p>`;
 const TRAIN_DEPTS = new Set(TRAINING.examples.map(([d]) => d));
 const EURO_V = /\b(230|400|380|220)\s?V\b|\b(230|400)\s?\/\s?\d/;
 
@@ -86,8 +86,8 @@ export const catalogIndex = {
         ${crumbs([['Home', '#home'], ['Catalog']])}
         <h1 class="h1">The catalog.</h1>
         <div class="cat-head__row">
-          <p class="lede phead__lede">Welders, frame benches, spray booths, dust extraction, hand tools, air tools, lifts, carts and racks. Every product with its maker’s part numbers, specs and photos. Add what you need to your quote and Velocity sends back a written price.</p>
-          <dl class="counts" data-counts></dl>
+          <p class="lede phead__lede">Welders, frame benches, spray booths, dust extraction, hand tools, air tools, lifts, carts and racks. Every product with its part numbers, specs and photos. Add what you need to your quote and Velocity sends back a written price.</p>
+          <dl class="counts counts--3" data-counts></dl>
         </div>
         <form class="bigsearch" data-bigsearch role="search">
           <label class="sr" for="cat-q">Search the catalog</label>
@@ -106,7 +106,7 @@ export const catalogIndex = {
     catalog().then(cat => {
       if (gone) return;
       const c = cat.counts;
-      el.querySelector('[data-counts]').innerHTML = [[c.depts, 'departments'], [c.fams, 'products'], [c.codes, 'part numbers'], [c.photos, 'photos']]
+      el.querySelector('[data-counts]').innerHTML = [[c.codes, 'part numbers'], [c.depts, 'departments'], [c.photos, 'photos']]
         .map(([v, l]) => `<div><dt>${esc(l)}</dt><dd>${num(v)}</dd></div>`).join('');
       const body = el.querySelector('[data-body]');
       body.innerHTML = `<div class="wrap">
@@ -115,7 +115,7 @@ export const catalogIndex = {
             <span class="dtile__body">
               <span class="dtile__n">Not listed here yet</span>
               <span class="dtile__name">Paint, masking, tape and more lines ${icon('arrow')}</span>
-              <span class="dtile__subs">Velocity carries shop supplies and lines from other makers that aren’t on the site yet. Put them in the notes of your quote, or send your own list.</span>
+              <span class="dtile__subs">Velocity carries shop supplies and more lines that aren’t on the site yet. Put them in the notes of your quote, or send your own list.</span>
             </span>
           </a>
         </div>
@@ -151,7 +151,7 @@ export function deptPage(id) {
               ${crumbs([['Home', '#home'], ['Catalog', '#catalog'], [d.name]])}
               <h1 class="h1 h1--md">${esc(d.name)}.</h1>
               <p class="lede phead__lede">${esc(d.blurb)}</p>
-              <p class="dhead__n"><span>${nFams(d.nf)}</span><span>${nCodes(d.codes)}</span></p>
+              <p class="dhead__n"><span>${nCodes(d.codes)}</span></p>
             </div>
             <div class="dhead__img">${photo(d.hero, { pack: d.hp, eager: true, w: d.hw, h: d.hh, cap: true })}</div>
           </div>
@@ -159,7 +159,7 @@ export function deptPage(id) {
         ${named ? `<div class="filters"><div class="wrap filters__in"><div class="chips" role="list">${subs.map(([s, ids], i) => `<a class="chip" role="listitem" href="#sub-${i}" data-sub="${i}">${esc(s || 'More')}<span class="chip__n">${ids.length}</span></a>`).join('')}</div></div></div>` : ''}
         <div class="wrap dbody">
           ${subs.map(([s, ids], i) => `<section class="catsec" id="sub-${i}" data-subsec="${i}">
-            ${named ? `<header class="catsec__head"><h2>${esc(s || 'More from this department')}</h2><p class="catsec__meta">${nFams(ids.length)} · ${nCodes(ids.reduce((n, fid) => n + cat.fam[fid].all, 0))}</p></header>` : ''}
+            ${named ? `<header class="catsec__head"><h2>${esc(s || 'More from this department')}</h2><p class="catsec__meta">${nCodes(ids.reduce((n, fid) => n + cat.fam[fid].all, 0))}</p></header>` : ''}
             <div class="fgrid">${ids.map(fid => famCard(cat.fam[fid])).join('')}</div>
           </section>`).join('')}
           ${powerNote}
@@ -206,7 +206,7 @@ export function deptPage(id) {
 /* ---------- product family ---------- */
 
 function codeRows(f, dt, cat, focus) {
-  // the part number list: the family's own codes, with the maker's table columns where the book prints a table
+  // the part number list: the family's own codes, with the table columns the catalog prints
   const t = dt.table, own = dt.codes || [];
   const label = (c) => (cat.codes.get(c) || {}).label || '';
   let cols = [], rows = [];
@@ -418,15 +418,15 @@ export function searchPage(q0 = '') {
         if (!q) { sum.textContent = ''; res.innerHTML = `<p class="muted">Type a part number like <span class="pn">SP202002</span>, or what the tool does: spot welder, bumper rack, paint gun, wrench set.</p>`; return; }
         const r = search(cat, q, { famLimit: 48, codeLimit: 60 });
         const nf = r.totalFams ?? r.fams.length, nc = r.totalCodes ?? r.codes.length;
-        sum.innerHTML = r.exact ? `Part number <span class="pn">${esc(r.exact.code)}</span> is in the catalog.` : (nf || nc) ? `${nFams(nf)} and ${nCodes(nc)} match “${esc(q)}”.` : `Nothing in the catalog matches “${esc(q)}”.`;
+        sum.innerHTML = r.exact ? `Part number <span class="pn">${esc(r.exact.code)}</span> is in the catalog.` : (nf || nc) ? `${[nc && nCodes(nc), nf && nPages(nf)].filter(Boolean).join(' and ')} match${nf + nc === 1 ? 'es' : ''} “${esc(q)}”.` : `Nothing in the catalog matches “${esc(q)}”.`;
         const exact = r.exact ? (() => { const c = r.exact, f = cat.fam[c.fid]; return `<div class="sres__exact">
             <a class="sres__exact-img" href="${famHref(f, c.code)}">${photo(c.photo || f.photo, { pack: famPack(f.id) })}</a>
             <div><p class="pn">${esc(c.code)}</p><p class="sres__exact-n"><a href="${famHref(f, c.code)}">${esc(c.label)}</a></p><p class="muted small">${esc(f.name)} · ${esc(cat.dept[f.dept].name)}</p></div>
             ${addButton(c.code, c.label, { big: true })}
           </div>`; })() : '';
         res.innerHTML = `${exact}
-          ${r.fams.length ? `<section class="sres__sec"><header class="catsec__head"><h2>Products</h2><p class="catsec__meta">${nf > r.fams.length ? `First ${r.fams.length} of ${num(nf)}` : nFams(nf)}</p></header><div class="fgrid">${r.fams.map(f => famCard(f)).join('')}</div></section>` : ''}
-          ${r.codes.length ? `<section class="sres__sec"><header class="catsec__head"><h2>Part numbers</h2><p class="catsec__meta">${nc > r.codes.length ? `First ${r.codes.length} of ${num(nc)}` : nCodes(nc)}</p></header>
+          ${r.fams.length ? `<section class="sres__sec"><header class="catsec__head"><h2>Products</h2><p class="catsec__meta">${nf > r.fams.length ? `First ${r.fams.length} of ${num(nf)}` : `${num(nf)} found`}</p></header><div class="fgrid">${r.fams.map(f => famCard(f)).join('')}</div></section>` : ''}
+          ${r.codes.length ? `<section class="sres__sec"><header class="catsec__head"><h2>Part numbers</h2><p class="catsec__meta">${nc > r.codes.length ? `First ${r.codes.length} of ${num(nc)}` : `${num(nc)} found`}</p></header>
             <ul class="clist clist--wide">${r.codes.map(c => { const f = cat.fam[c.fid]; return `<li class="clist__i">
               <a class="clist__img" href="${famHref(f, c.code)}" tabindex="-1" aria-hidden="true">${c.photo ? photo(c.photo, { pack: famPack(c.fid) }) : ''}</a>
               <span class="clist__t"><span class="pn">${esc(c.code)}</span><a class="clist__n" href="${famHref(f, c.code)}">${esc(c.label)}</a><span class="clist__fam">${esc(f.name)}</span></span>

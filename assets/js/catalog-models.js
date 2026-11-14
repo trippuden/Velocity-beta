@@ -1,4 +1,4 @@
-// The bay builder's products: real catalog products, modelled from the maker's catalogue v7.0 (names, part numbers,
+// The bay builder's products: real catalog products, modeled from the catalog (names, part numbers,
 // sizes and the book's own photos), shared with the intro film. Each model follows its photo: shape, colors,
 // proportions and the parts you see, with no logos. Sizes the book prints are used as printed; the rest are read
 // from the photos and kept in proportion.

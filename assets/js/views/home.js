@@ -31,7 +31,7 @@ function hero(live) {
     <div class="hero__copy">
       <p class="hero__eyebrow"><span>Collision shop equipment</span><span>Shop supplies</span><span>Training</span></p>
       <h1><span class="ln">Equip the whole shop.</span> <span class="ln">One quote.</span></h1>
-      <p class="hero__lede">Welders and dent pullers, frame benches, spray booths, dust extraction, hand tools, lifts, carts and racks, each with its maker’s part numbers, specs and photos. Paint, masking and tape go on the same quote. Velocity trains your techs on the equipment when they need it.</p>
+      <p class="hero__lede">Welders and dent pullers, frame benches, spray booths, dust extraction, hand tools, lifts, carts and racks, each with its part numbers, specs and photos. Paint, masking and tape go on the same quote. Velocity trains your techs on the equipment when they need it.</p>
       <form class="bigsearch bigsearch--hero" data-hero-search role="search">
         <label class="sr" for="hero-q">Search the catalog</label>
         ${icon('search')}<input id="hero-q" name="q" type="search" autocomplete="off" placeholder="Part number or product" enterkeyhint="search">
@@ -43,9 +43,9 @@ function hero(live) {
       </div>
     </div>
     <div class="hero__rail" data-rail>
+      <div class="rail__i"><span class="rail__k">Part numbers listed</span><span class="rail__v" data-rail="codes">2,391</span></div>
       <div class="rail__i"><span class="rail__k">Departments</span><span class="rail__v" data-rail="depts">21</span></div>
-      <div class="rail__i"><span class="rail__k">Products</span><span class="rail__v" data-rail="fams">416</span></div>
-      <div class="rail__i"><span class="rail__k">Part numbers</span><span class="rail__v" data-rail="codes">2,391</span></div>
+      <div class="rail__i"><span class="rail__k">More lines</span><span class="rail__v">Being added</span></div>
       <div class="rail__i"><span class="rail__k">Training</span><span class="rail__v">On the equipment you buy</span></div>
     </div>
   </section>`;
@@ -56,7 +56,7 @@ function depts() {
   <section class="sec" id="departments">
     <div class="wrap">
       <div class="split-head">
-        ${sectionHead({ idx: '01', kicker: 'The catalog', title: 'From frame benches to rivets.', lede: 'Every product with its maker’s part numbers, specs and photos, sorted the way a repair moves through the shop. Open a department, or search a part number from any page.' })}
+        ${sectionHead({ idx: '01', kicker: 'The catalog', title: 'From frame benches to rivets.', lede: 'Every product with its part numbers, specs and photos, sorted the way a repair moves through the shop. Open a department, or search a part number from any page.' })}
         <a class="link-arrow" href="#catalog">See the whole catalog ${icon('arrow')}</a>
       </div>
       <div class="dgrid" data-depts><p class="muted small">Loading the catalog…</p></div>
@@ -92,7 +92,7 @@ function bayTeaser() {
   <section class="sec dark-2">
     <div class="wrap bayt">
       <div>
-        ${sectionHead({ idx: '04', kicker: 'Build your bay', title: 'See it on the floor first.', lede: 'Pick a starting point, then add or take away pieces. Every one is a real catalog product with its part number, modeled from its maker’s photos. Move the camera around it, then send the whole bay as one quote.' })}
+        ${sectionHead({ idx: '04', kicker: 'Build your bay', title: 'See it on the floor first.', lede: 'Pick a starting point, then add or take away pieces. Every one is a real catalog product with its part number, modeled from its photos. Move the camera around it, then send the whole bay as one quote.' })}
         <div class="bayt__starts">${PRESETS.map((p, i) => {
           const pieces = Object.values(p.items).reduce((s, q) => s + q, 0);
           return `<a class="bayt__start" href="#bay" data-bay-preset="${p.id}" data-bayt="${i}">
@@ -191,10 +191,9 @@ export const home = {
       if (gone) return;
       cat = c;
       el.querySelector('[data-rail="depts"]').textContent = num(c.counts.depts);
-      el.querySelector('[data-rail="fams"]').textContent = num(c.counts.fams);
       el.querySelector('[data-rail="codes"]').textContent = num(c.counts.codes);
       const grid = el.querySelector('[data-depts]');
-      grid.innerHTML = deptOrder(c).map(d => deptTile(d)).join('') + calTile() + `<a class="dtile dtile--list" href="#quote"><span class="dtile__body"><span class="dtile__n">Not listed here yet</span><span class="dtile__name">Paint, masking, tape and more lines ${icon('arrow')}</span><span class="dtile__subs">Velocity carries shop supplies and lines from other makers that aren’t on the site yet. Put them in the notes of your quote, or send your own list.</span></span></a>`;
+      grid.innerHTML = deptOrder(c).map(d => deptTile(d)).join('') + calTile() + `<a class="dtile dtile--list" href="#quote"><span class="dtile__body"><span class="dtile__n">Not listed here yet</span><span class="dtile__name">Paint, masking, tape and more lines ${icon('arrow')}</span><span class="dtile__subs">Velocity carries shop supplies and more lines that aren’t on the site yet. Put them in the notes of your quote, or send your own list.</span></span></a>`;
       grid.querySelectorAll('.dtile').forEach((t, i) => { t.setAttribute('data-reveal', ''); t.style.transitionDelay = `${(i % 4) * 50}ms`; });
       el.querySelector('[data-featured]').innerHTML = FEATURED.map(id => c.fam[id]).filter(Boolean).map(f => famCard(f, { pack: 'set/featured' })).join('');
       el.querySelectorAll('[data-code-label]').forEach(i => { const x = c.codes.get(i.dataset.codeLabel); i.textContent = x ? x.label : ''; });

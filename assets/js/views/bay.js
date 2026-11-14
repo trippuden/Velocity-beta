@@ -45,7 +45,7 @@ export const bay = {
           <div class="presets">${PRESETS.map(p => `<button type="button" class="preset" data-preset="${p.id}"><b>${esc(p.name)}</b><span>${esc(p.note)}</span></button>`).join('')}</div>
           <p class="bay__h"><span>From the catalog</span><button type="button" class="tiny" data-clear style="color:#aeb3ba">Clear bay</button></p>
           <div data-groups><p class="small" style="color:#8d929a">Loading the catalog…</p></div>
-          <p class="small bay__fine">Every piece here is a real catalog product with its part number, modeled from its maker’s photos. Prices come back on your quote.</p>
+          <p class="small bay__fine">Every piece here is a real catalog product with its part number, modeled from its photos. Prices come back on your quote.</p>
         </div>
         <div class="bay__sum" aria-live="polite">
           <div class="sumrow sumrow--total"><span>In this bay</span><b data-s="count">0 pieces</b></div>

@@ -1,7 +1,7 @@
 // Velocity site shell: header with catalog search, footer, preview tools and the hash router.
 import { SITE, PH, PH_GROUPS, LEGACY, CALIBRATION, DEPT_ALIAS } from './data.js';
 import { esc, rt, icon, quote, syncAddButtons, toast, viewerCanEdit, getDb } from './core.js';
-import { catalog, photoAttrs, famHref, deptHref, nCodes, loaded } from './catalog-data.js';
+import { catalog, photoAttrs, famHref, deptHref, nCodes, nPages, loaded } from './catalog-data.js';
 import { search } from './search.js';
 import { home } from './views/home.js';
 import { catalogIndex, deptPage, familyPage, searchPage, deptOrder } from './views/catalog.js';
@@ -51,7 +51,7 @@ function renderHeader() {
     <div class="mega__in">
       <div><p class="mega__h">Departments <span data-mega-count></span></p><div class="mega__depts" data-mega-depts><p class="small" style="color:#8d929a">Loading the catalog…</p></div></div>
       <div class="mega__side">
-        <a class="mega__feature" href="#catalog"><strong>The whole catalog</strong><span data-mega-all>Every department, product and part number, with each maker’s photos and specs.</span>${icon('arrow')}</a>
+        <a class="mega__feature" href="#catalog"><strong>The whole catalog</strong><span data-mega-all>Every department and part number, with photos and specs.</span>${icon('arrow')}</a>
         <a class="mega__feature" href="#bay"><strong>Build your bay</strong><span>Drop real catalog products into a 3D bay and send the whole bay as one quote.</span>${icon('arrow')}</a>
         <a class="mega__feature" href="#quote"><strong>Paint, masking and tape</strong><span>Velocity carries shop supplies too. Send your own list with your quote.</span>${icon('arrow')}</a>
       </div>
@@ -135,7 +135,7 @@ function renderHeader() {
   catalog().then(cat => {
     const depts = deptOrder(cat);
     $('[data-mega-count]').textContent = String(cat.depts.length);
-    $('[data-mega-all]').textContent = `${cat.counts.depts} departments, ${cat.counts.fams.toLocaleString('en-US')} products and ${nCodes(cat.counts.codes)}, with each maker’s photos and specs.`;
+    $('[data-mega-all]').textContent = `${nCodes(cat.counts.codes)} in ${cat.counts.depts} departments, with photos and specs. More lines are being added.`;
     $('[data-mega-depts]').innerHTML = depts.map(d => `<a class="mdept" href="${deptHref(d)}">
         <span class="mdept__img"><img ${photoAttrs(d.hero, 'set/heroes')} alt="" decoding="async"></span>
         <span class="mdept__t"><span class="mdept__n">${esc(d.name)}</span><span class="mdept__c">${nCodes(d.codes)}</span></span>
@@ -168,7 +168,7 @@ function bindSearch(form) {
     const codes = r.exact ? [r.exact, ...r.codes.filter(c => c !== r.exact)].slice(0, 6) : r.codes.slice(0, 6);
     drop.innerHTML = `${r.fams.length ? `<p class="hs__h">Products</p>${r.fams.map(f => `<a class="hs__i" role="option" href="${famHref(f)}"><span class="hs__img">${f.photo ? `<img ${photoAttrs(f.photo, f.lp, true)} alt="" decoding="async">` : ''}</span><span class="hs__t"><span class="hs__n">${esc(f.name)}</span><span class="hs__m">${esc(cat.dept[f.dept].name)} · ${nCodes(f.all)}</span></span></a>`).join('')}` : ''}
       ${codes.length ? `<p class="hs__h">Part numbers</p>${codes.map(c => `<a class="hs__i hs__i--code" role="option" href="${famHref(cat.fam[c.fid], c.code)}"><span class="pn">${esc(c.code)}</span><span class="hs__t"><span class="hs__n">${esc(c.label)}</span></span></a>`).join('')}` : ''}
-      ${nf || nc ? `<a class="hs__all" role="option" href="#search/${encodeURIComponent(q)}">See all results for “${esc(q)}” <span>${nf ? `${nf.toLocaleString('en-US')} product${nf === 1 ? '' : 's'}` : ''}${nf && nc ? ', ' : ''}${nc ? nCodes(nc) : ''}</span>${icon('arrow')}</a>` : `<p class="hs__none">Nothing in the catalog matches “${esc(q)}”. Velocity carries more than the catalog: <a href="#quote">ask on a quote</a>.</p>`}`;
+      ${nf || nc ? `<a class="hs__all" role="option" href="#search/${encodeURIComponent(q)}">See all results for “${esc(q)}” <span>${[nc && nCodes(nc), nf && nPages(nf)].filter(Boolean).join(', ')}</span>${icon('arrow')}</a>` : `<p class="hs__none">Nothing in the catalog matches “${esc(q)}”. Velocity carries more than the catalog: <a href="#quote">ask on a quote</a>.</p>`}`;
     items = [...drop.querySelectorAll('.hs__i, .hs__all')];
     drop.hidden = false; form.classList.add('is-open'); input.setAttribute('aria-expanded', 'true');
     setActive(-1);
@@ -227,7 +227,7 @@ function renderFooter() {
   </div>
   <div class="ftr__bottom">
     <p>&copy; ${new Date().getFullYear()} ${rt(SITE.legal)}. Velocity sells equipment and supplies and trains technicians on the equipment. We do not repair vehicles.</p>
-    <p class="ftr__note">Product photos, part numbers and specs come from each maker’s own catalog. Prices come on your written quote.</p>
+    <p class="ftr__note">Product photos, part numbers and specs are shown as the factory publishes them. Prices come on your written quote.</p>
   </div>`;
   catalog().then(cat => {
     const box = $('[data-ftr-depts]');
@@ -254,7 +254,7 @@ function renderPreviewTools() {
       <p class="drawer__intro">Everything marked <span class="ph-key">like this</span> on the site is a placeholder. Swap in the real answer and the mark goes away. The rest of the list has no spot on the page yet.</p>
       <label class="switch"><input type="checkbox" data-hl ${highlight ? 'checked' : ''}><span class="switch__ui"></span><span>Highlight placeholders on the page</span></label>
       <div class="drawer__groups">${groups}</div>
-      <p class="drawer__foot">Product photos, part numbers and specs come from each maker’s own catalog. The bay builder’s 3D models are built from those photos.</p>
+      <p class="drawer__foot">Product photos, part numbers and specs come from the catalog of each line Velocity sells. The bay builder’s 3D models are built from those photos.</p>
     </div>`;
   document.addEventListener('click', e => {
     if (e.target.closest('[data-open-drawer]')) { window.__closeMenus && window.__closeMenus(); openDrawer(); }
